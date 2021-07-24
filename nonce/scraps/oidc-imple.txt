@@ -1,0 +1,34 @@
+
+
+X.509 Certificate Policy for India PKI
+X509-Certificate-Policy-India.pdf
+http://cca.gov.in/sites/files/pdf/guidelines/CCA-CP.pdf
+version 1.8
+Jan 2021
+
+
+OpenID Connect Client-Initiated Backchannel Authentication Flow - Core 1.0 draft-04
+https://openid.net/specs/openid-client-initiated-backchannel-authentication-core-1_0.html
+
+Get Tokens: Client Credentials Grant Type
+Page updated:  September 30, 2020
+https://docs.pingidentity.com/bundle/developer/page/ixj1601508083821.html
+
+
+Implement the OAuth 2.0 Authorization Code with PKCE Flow
+August 22, 2019
+https://developer.okta.com/blog/2019/08/22/okta-authjs-pkce
+
+https://developer.okta.com/blog/authors/micah-silverman/
+
+
+
+Takahiko Kawasaki
+https://www.authlete.com/
+New Architecture of OAuth 2.0 and OpenID Connect Implementation
+~Semi-Hosted Service Pattern~
+https://darutk.medium.com/new-architecture-of-oauth-2-0-and-openid-connect-implementation-18f408f9338d
+
+
+https://darutk.medium.com/full-scratch-implementor-of-oauth-and-openid-connect-talks-about-findings-55015f36d1c3
+Full-Scratch Implementor of OAuth and OpenID Connect Talks About Findings

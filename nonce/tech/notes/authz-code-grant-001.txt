@@ -1,0 +1,120 @@
+Section 4.1 Authorization Code Grant (ACG)
+
+- Part A. Authenticate the resource owner and obtain authorization code.
+    Authenticate RO.
+    Establish if RO grants or denies Client's access request.
+    Grant authorization code to the Client.
+
+    - Initial State
+        client id registered with the authorization server.
+        client has access to the authorization endpoint.
+
+    - Explicit Input
+        Required 'response_type' = 'code'
+        Required 'client_id'
+        Optional 'scope'
+        Optional 'redirect_uri'
+            used by the AS to redirect the UA back to the Client
+            after access is either granted or denied.
+        Recommended 'state'
+
+    - Preconfigured Input (Global. Well-known.)
+        AS::AuthorizationEndpoint
+        client id
+
+    - Output (4.1.2.  Authorization Response)
+        If RO is authenticated and RO grants client's access request
+            Required Fresh ShortLived 'code'
+                = Fresh 'authz_code' Expires in 1 minute to 10 minutes (MAX).
+            Required Reflected 'state'
+
+        AS::ACG::authz_code::Security::MUST.
+        AS::ACG::Impl::Repr::authz_code::SHOULD.
+        Client::ACG::Response::MUST.
+
+    - Effects
+        AuthorizationServer AS
+            Condition CodeGranted - valid request, authorization code is granted.
+                let r = bind('authz_code', 'client_id', 'redirect_uri', timestamp).
+                store r in PendingClientAuthN(for use in Part B).
+            Condition NOT CodGranted - autorization code is NOT granted.
+                let r = ('client_id', 'redirect_uri', timestamp, reason).
+                store r in FailedAuthN (for use in SecurityAnalytics).
+                update SecuritySubsytem.
+                    referred for quotas, alerts, dashboards,...
+        Redirection
+            goto 'redirect_uri'
+        Interaction
+            ACG Request: Client -| web browser |- RO
+            RO AuthN: AS -| channel |- RO
+            ACG Response: AS -| web browser |- Client
+
+
+- Part B. Authenticate the client and obtain tokens.
+    Authenticate the Client.
+        what mechanisms are used to authenticate the client?
+    Validate authorization code.
+    Grant an access token and an optional refresh token.
+
+    - Input
+        Required 'grant_type' = 'authorization_code'
+        Required 'code' = A::Output::'authz_code'
+        Conditional Required 'client_id' = A::Input::'client_id'
+        Conditional Required 'redirect_uri' = ?A::Input::'redirect_uri'
+
+    - Preconfigured Input (Global. Well-known.)
+        AS::TokenEndpoint
+        client id
+
+    - Output
+        Access token.
+        Optional Refresh token.
+
+        - Effects
+        AuthorizationServer
+            Precondition: token request is valid.
+                update TokenStore ('client id', 'access token', 'refresh token', 'timestamp').
+
+Optimized for confidential clients
+
+
+
+Mandatory Implementation Requirements, Guidelines, and Rules.
+
+AS::ACG::authz_code::Security::MUST
+The authorization code is bound to the client identifier and redirection URI.
+    If an authorization code is used more than once, the authorization server
+    MUST deny the request and SHOULD revoke (when possible) all tokens
+    previously issued based on that authorization code.
+
+Client::ACG::Response::MUST.
+The client MUST ignore unrecognized response parameters.
+
+AS::ACG::Impl::Repr::authz_code::SHOULD
+The authorization server SHOULD document the size of any value it issues.
+Tha 'authz_code' string size is left undefined by OAUth 2.0 specification.
+    The authorization server SHOULD document the size of any value it issues.
+    The client should avoid making assumptions about code value sizes.
+
+AS::Endpoint::URI::MAY
+The endpoint URI MAY include an "application/x-www-form-urlencoded"
+formatted query component, which MUST be retained when adding additional
+query parameters.
+
+AS::TokenEndpoint::MUSTNOT
+The endpoint URI MUST NOT include a fragment component.
+
+AS::TokenEndpoint::Security::MUST
+The authorization server MUST require the use of TLS when sending requests
+to the token endpoint. (Section 1.6)
+
+AS::TokenEnpoint::Request::MUST
+The client MUST use the HTTP "POST" method when making access token requests.
+Parameters sent without a value MUST be treated as if they were omitted from the request.
+The authorization server MUST ignore unrecognized request parameters.
+
+AS::TokenEnpoint::Request::MUSTNOT
+Request and response parameters MUST NOT be included more than once.
+
+Client::AccessToken::Request::MUST
+The client MUST use the HTTP "POST" method when making access token requests.

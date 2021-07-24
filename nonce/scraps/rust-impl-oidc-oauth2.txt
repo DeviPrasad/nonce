@@ -1,0 +1,29 @@
+
+OAuth Working Group Specifications
+Current active drafts in the OAuth working group
+
+https://oauth.net/specs/
+
+https://github.com/dermesser
+Lewin Bormann
+dermesser
+dermesser/yup-oauth2
+https://github.com/dermesser/yup-oauth2
+yup-oauth2 is a utility library which implements several OAuth 2.0 flows.
+
+ramosbugs/oauth2-rs
+ramosbugs/openidconnect-rs
+OpenID Connect Library for Rust
+This library provides extensible, strongly-typed interfaces for the OpenID Connect protocol.
+API documentation and examples are available on docs.rs
+
+Create an async CRUD web service in Rust with warp
+https://blog.logrocket.com/create-an-async-crud-web-service-in-rust-with-warp/
+
+https://github.com/seanmonstar/warp
+eanmonstar/warp
+A super-easy, composable, web server framework for warp speeds.
+
+
+
+

@@ -1,0 +1,25 @@
+
+JSON Web Key (JWK)
+https://datatracker.ietf.org/doc/html/rfc7517
+
+JSON Web Tokens
+https://auth0.com/docs/tokens/json-web-tokens
+
+All Crates for keyword 'jwk'
+https://crates.io/keywords/jwk
+
+Frank JWT
+Implementation of JSON JWT
+https://crates.io/crates/frank_jwt
+
+jsonwebtoken 7.2.0
+https://crates.io/crates/jsonwebtoken/7.2.0/dependencies
+
+
+jsonwebkey
+https://github.com/nhynes/jwk-rs
+
+
+https://datatracker.ietf.org/doc/html/rfc8705
+OAuth 2.0 Mutual-TLS Client Authentication and Certificate-Bound Access Tokens
+

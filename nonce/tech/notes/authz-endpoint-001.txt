@@ -1,0 +1,45 @@
+Section 3 Protocol Endpoints
+
+AuthorizationServer (AS)
+AuthzEndpoint (AEP)
+TokenEndpoint (TEP)
+RedirectionEndpoint(REP)
+ClientEndpoint(CEP)
+ResourceOwner (RO)
+UserAgent (UA)
+WebBrowser (WBUA)
+AutoAgent (AA)
+AuthzGrant (AG)
+
+
+The authorization process utilizes two authorization server endpoints,
+and one client endpoint. The former endpoints are HTTP resources, while
+the latter is used to redirect ROs UA to the client. The former include
+authorization endpoint and token endpoint, and the latter, redirection
+endpoint.
+
+
+Section 3.1 Authorization Endpoint
+
+The authorization endpoint is used to interact with the resource
+owner and obtain an authorization grant.
+
+The authorization server MUST first verify the identity of the
+resource owner.  The way in which the authorization server authenticates
+the resource owner depends on the security context.
+(username and password login, session cookies)
+
+OAuth 2.0 DOES NOT specify how this endpoint is discovered.
+
+1. The endpoint URI MAY include an "application/x-www-form-urlencoded"
+    format, which MUST be retained when adding additional query parameters
+2. The authorization endpoint URI MUST NOT include a fragment component.
+3. The authorization server MUST require the use of TLS when sending
+    requests to the authorization endpoint.
+4. The authorization server MUST support the use of the HTTP "GET"
+    for the authorization endpoint.
+5. The authorization server MAY support the use of the "POST" method.
+6. Parameters sent without a value MUST be treated as if they were
+    omitted from the request.
+7. The authorization server MUST ignore unrecognized request parameters.
+8. Request and response parameters MUST NOT be included more than once.

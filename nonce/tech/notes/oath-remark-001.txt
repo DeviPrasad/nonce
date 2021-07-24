@@ -1,0 +1,21 @@
+
+oauth 2.0
+The following details are not formally defined:
+    client registration
+    authorization server capabilities
+    endpoint discovery
+
+Implementations MAY also support additional transport-layer security
+mechanisms that meet their security requirements.
+
+Refresh Token
+used to obtain additional access tokens.
+with identical or narrower scope
+    the new access token may have a shorter lifetime, and
+    fewer permissions than authorized by the resource owner.
+Issuing a refresh token is optional at the discretion of the
+authorization server.
+If the authorization server issues a refresh token, it is included
+when issuing an access token.
+refresh tokens are intended for use only with authorization servers
+and are never sent to resource servers.

@@ -1,0 +1,109 @@
+
+https://datatracker.ietf.org/doc/html/rfc6749
+
+Section 2 Client Registration
+
+OAuth 2.0 does not require a direct interaction between the
+client and the authorization server.  When supported by the
+authorization server, registration c
+
+The authorization server may perform client discovery using a
+trusted channel.
+
+When registering a client, the client developer SHALL:
+    1. specify the client type as described in Section 2.1,
+    2. provide its client redirection URIs as described in Section 3.1.2, and
+    3. include any other information required by the authorization server
+       e.g., application name, website, description, logo image, the
+       acceptance of legal terms.
+
+Client Types
+    confidential
+    public
+
+A client may be implemented as a distributed set of components, each
+with a different client type and security context, that is, a
+distributed client with both
+    1. a confidential server-based component, and
+    2. a public browser-based component).
+
+Dhaaranaa implements the confidential client in Rust, while the public
+client is implemented in TypeScript.
+
+Three Client profiles are defined
+    1. web application - a confidential client running on a web server.
+    2. user-agent-based application.
+        a public client.
+        code downloaded from a web server.
+    3. native application.
+        installed and executed on a device owned by resource owner.
+
+
+2.2 Client Identifier.
+
+    1. Authorization server issues an identifier to the registered client.
+    2. Client identifier is unique in the scope of the authorization server.
+    3. OAuth 2.0 DOES NOT specify the  structure or size of
+        the client identifiers.
+    4. The client identifier is not a secret; it is exposed to the
+        resource owner.
+    5. Client Id MUST NOT be used alone for client authentication.
+
+/**
+Does OIDC or FAPI have more stringent requirements on client identifiers?
+OIDC's terminology describes a Relying Party (RP) as a
+    OAuth 2.0 Client application requiring End-User Authentication and
+    Claims from an OpenID Provider.
+OIDC requires RP's client-id to be a case sensitive string containing a
+StringOrURI value.
+ID Token has two claims named 'aud' and 'azp' which represent the client id
+to which the id token was issued.
+**/
+
+
+2.3.  Client Authentication
+
+The security requirements of the authorization server determine the method
+employed to authenticate the client. This is especially true if the client
+is a confidential client.
+
+Confidential clients are typically issued (or establish) a set of
+client credentials used for authenticating with the authorization
+server (e.g., password, public/private key pair).
+    How is the actually implemented?
+    What authentication methods are ususlly supported?
+    When is the client password allotted? During registration?
+
+The authorization server MAY establish a client authentication method
+with public clients.
+    The authorization server MUST NOT rely on public client.
+    authentication for the purpose of identifying the client.
+
+The client MUST NOT use more than one authentication method in each
+request.
+
+When using any authentication method other than the , the authorization server MUST define a
+mapping between the client identifier (registration record) and
+authentication scheme.
+
+(1) HTTP Basic authentication scheme.
+    client_id is used as the user name.
+    encoded using the "application/x-www-form-urlencoded" encoding algorithm.
+    RFC 2617 (https://datatracker.ietf.org/doc/html/rfc2617).
+
+
+Implementor Note:
+
+The authorization server MUST require the use of TLS as described in
+Section 1.6 when sending requests using password authentication.
+
+The authorization server MUST support the HTTP Basic
+authentication scheme for authenticating clients that were issued a
+client password.
+
+Alternatively, the authorization server MAY support including the
+client credentials in the request-body using
+    client_id
+    client_secret
+The parameters can only be transmitted in the request-body and
+MUST NOT be included in the request URI.

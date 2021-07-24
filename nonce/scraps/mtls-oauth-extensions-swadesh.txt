@@ -1,0 +1,28 @@
+
+
+
+Plebian OIDC
+	Swadesh AuthZ and AuthN using Aadhaar, Voter Id, Rationa Card and PAN.
+
+Figure 1. Obtaining a digital certificate
+https://www.ibm.com/docs/en/ibm-mq/7.5?topic=certificates-obtaining-personal-from-certificate-authority
+
+Cartification Authority could be the Swadesh platform hosted by the Indian Govt. 
+
+tls_client_auth_subject_bpl
+tls_client_auth_subject_ration
+tls_client_auth_subject_voterid
+tls_client_auth_subject_pan
+tls_client_auth_subject_aadhaar
+tls_client_auth_subject_phone
+tls_client_auth_subject_qrcode
+tls_client_auth_subject_jandhan
+tls_client_auth_subject_passport
+tls_client_auth_subject_dl
+tls_client_auth_subject_address
+
+
+
+
+The OAuth 2.0 Authorization Framework: Bearer Token Usage
+https://datatracker.ietf.org/doc/html/rfc6750

@@ -1,0 +1,33 @@
+
+Deployment and Hosting Patterns in OAuth
+https://justinsecurity.medium.com/deployment-and-hosting-patterns-in-oauth-a1666dc0d966
+Justin Ritcher 
+Jul 27, 2017·9 min read
+
+
+Takahiko Kawasaki
+What is OAuth 2.0 Server/OpenID Connect Server?
+https://www.miniorange.com/oauth2-server
+Oct 23, 2017·12 min read
+
+
+Okta
+An Illustrated Guide to OAuth and OpenID Connect
+https://developer.okta.com/blog/2019/10/21/illustrated-guide-to-oauth-and-oidc
+
+
+Google Identity
+Using OAuth 2.0 for Server to Server Applications
+https://developers.google.com/identity/protocols/oauth2/service-account
+
+
+New Architecture of OAuth 2.0 and OpenID Connect Implementation
+https://darutk.medium.com/new-architecture-of-oauth-2-0-and-openid-connect-implementation-18f408f9338d
+
+
+https://docs.oracle.com/cd/E55956_01/doc.11123/oauth_guide/content/part_oauth_server.html
+
+https://docs.oracle.com/cd/E55956_01/doc.11123/oauth_guide/content/oauth_flows.html
+Part 1. API Gateway as an OAuth server
+
+

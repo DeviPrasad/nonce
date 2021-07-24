@@ -1,0 +1,18 @@
+Implementation Questions.
+
+Section 2.3.1
+Client Authentication
+
+"Confidential clients are typically issued (or establish) a set of
+client credentials used for authenticating with the authorization
+server (e.g., password, public/private key pair)."
+    How is the actually implemented?
+    What authentication methods are ususlly supported?
+    When is the client password allotted? During registration?
+
+"Since this client authentication method involves a password, the
+authorization server MUST protect any endpoint utilizing it against
+brute force attacks."
+    How do ASs protect against brute force attacks?
+    Rate limiting, after N failed attempts?
+    Locking the client for a period of time?

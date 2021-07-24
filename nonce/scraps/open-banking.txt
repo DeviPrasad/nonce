@@ -1,0 +1,29 @@
+
+
+
+https://standards.openbanking.org.uk/api-specifications/
+
+https://standards.openbanking.org.uk/security-profiles/
+
+openid-financial-api-part-1-1_0.md
+https://bitbucket.org/openid/fapi/src/master/FAPI_1.0/openid-financial-api-part-1-1_0.md
+
+
+Financial Services – Financial API - Part 2: Read and Write API Security Profile
+https://openid.net/specs/openid-financial-api-part-2-wd-02.html
+
+Financial-grade API - Part 2: Read and Write API Security Profile
+https://openid.net/specs/openid-financial-api-part-2-wd-06.html
+
+
+https://openid.net/specs/openid-financial-api-ciba.html
+Financial-grade API: Client Initiated Backchannel Authentication Profile
+
+
+
+https://plaid.com/docs/api/
+Comprehensive reference for integrating with Plaid API endpoints
+
+https://www.yodlee.com/oceania/open-banking
+
+https://bankingblog.accenture.com/author/amit-mallick
