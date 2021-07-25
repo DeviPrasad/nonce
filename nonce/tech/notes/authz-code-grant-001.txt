@@ -5,11 +5,22 @@ Section 4.1 Authorization Code Grant (ACG)
     Establish if RO grants or denies Client's access request.
     Grant authorization code to the Client.
 
-    - Initial State
-        client id registered with the authorization server.
-        client has access to the authorization endpoint.
+    - Contract
+        AS::ACG::Request::MUST
+        AS::ACG::authz_code::Security::MUST.
+        AS::ACG::Impl::Repr::authz_code::SHOULD.
+        Client::ACG::Response::MUST.
 
-    - Explicit Input
+    - Preconfigured State (Global. Well-known.)
+        AS::AuthorizationEndpoint
+            client has access to the authorization endpoint.
+        client id
+            client id registered with the authorization server.
+        redirection uri
+            client's redirection endpoint previously established
+            during the client registration process.
+
+    - Input
         Required 'response_type' = 'code'
         Required 'client_id'
         Optional 'scope'
@@ -18,19 +29,13 @@ Section 4.1 Authorization Code Grant (ACG)
             after access is either granted or denied.
         Recommended 'state'
 
-    - Preconfigured Input (Global. Well-known.)
-        AS::AuthorizationEndpoint
-        client id
 
     - Output (4.1.2.  Authorization Response)
         If RO is authenticated and RO grants client's access request
-            Required Fresh ShortLived 'code'
-                = Fresh 'authz_code' Expires in 1 minute to 10 minutes (MAX).
+            Required Fresh ShortLived SingleUse 'code'
+                'authz_code' expires in 1 minute to 10 minutes (MAX).
+                Client can use the code at most once before the code expires..
             Required Reflected 'state'
-
-        AS::ACG::authz_code::Security::MUST.
-        AS::ACG::Impl::Repr::authz_code::SHOULD.
-        Client::ACG::Response::MUST.
 
     - Effects
         AuthorizationServer AS
@@ -51,43 +56,90 @@ Section 4.1 Authorization Code Grant (ACG)
 
 
 - Part B. Authenticate the client and obtain tokens.
+    Section 4.1.3.  Access Token Request
     Authenticate the Client.
         what mechanisms are used to authenticate the client?
+        Section 2.3, 2.3.1 and 2.3.2
+            HTTP Basic Authentication
+            client_id and client_secret are made part of the request.
+            They are embedded in the request body.
+            Any other mechanism that fits the security requirements of AS.
+        Section 2.4 - Unregistered Clients.
     Validate authorization code.
+    Validate the redirect uri.
     Grant an access token and an optional refresh token.
+
+    - Contract
+        AS::ACG::Request::MUST
+        AS::TokenEndpoint::Security::MUST
+        AS::TokenEndpoint::ClientAuthN::Security::MUST
+        AS::TokenEndpoint::MUSTNOT
+        AS::TokenEnpoint::Request::MUST (POST Requests ONLY)
+        AS::TokenEnpoint::Request::MUSTNOT
+        AS::TokenEnpoint::Request::MUST
+        AS::AccessToken::RedirectURI::Request::MUST
+        AS::AccessToken::Expiry::SHOULD
+
+    - Preconfigured State
+        AS::TokenEndpoint
+        client id
+        client secret
+        redirect uri
 
     - Input
         Required 'grant_type' = 'authorization_code'
         Required 'code' = A::Output::'authz_code'
+        Conditional Required 'redirect_uri' = SOME A::Input::'redirect_uri'
         Conditional Required 'client_id' = A::Input::'client_id'
-        Conditional Required 'redirect_uri' = ?A::Input::'redirect_uri'
-
-    - Preconfigured Input (Global. Well-known.)
-        AS::TokenEndpoint
-        client id
 
     - Output
         Access token.
         Optional Refresh token.
+        Section 5.1
+        REQUIRED 'access_token' = <opaque string>
+        REQUIRED 'token_type' = <opaque string>
+        RECOMMENDED 'expires_in' = <number of seconds>
+            AS::ACG::AccessToken::Expiry::SHOULD
+        OPTIONAL 'refresh_token' = <opaque string>
+        CONDITIONAL scope
+            OPTIONAL 'scope' = SOME A::Input::'scope'
+                if 'scope' is identical to the scope requested by the client.
+            REQUIRED 'scope' !=  A::Input::'scope'
+            REQUIRED 'scope' if A::Input::'scope' is NONE
 
-        - Effects
+    - Effects
         AuthorizationServer
             Precondition: token request is valid.
+                copy the just expired tokens to ExpiredTokenStore.
+                    timestamp with the retired tokens.
                 update TokenStore ('client id', 'access token', 'refresh token', 'timestamp').
 
-Optimized for confidential clients
 
 
+Implementation - Mandatory Requirements, Guidelines, and Rules.
 
-Mandatory Implementation Requirements, Guidelines, and Rules.
+AS::ACG::Request::MUST
+AS::ClientRegistration::MUST
+The authorization server MUST require public clients and SHOULD require
+confidential clients to register their redirection URIs.
+If a redirection URI is provided in the request, the authorization server MUST
+validate it against the registered value.
 
 AS::ACG::authz_code::Security::MUST
 The authorization code is bound to the client identifier and redirection URI.
-    If an authorization code is used more than once, the authorization server
+    The authorization code MUST be short lived.
+    The authorization code MUST expire within 10 minutes.
+    The authorization code MAY be used AT MOST once.
+    If an authorization code is used more than once to exchange an
+    authorization code for an access token, the authorization server
     MUST deny the request and SHOULD revoke (when possible) all tokens
     previously issued based on that authorization code.
+    If the authorization server observes multiple attempts to exchange an
+    authorization code for an access token, the authorization server
+    SHOULD attempt to revoke all access tokens already granted based on
+    the compromised authorization code.
 
-Client::ACG::Response::MUST.
+Client::ACG::Response::MUST
 The client MUST ignore unrecognized response parameters.
 
 AS::ACG::Impl::Repr::authz_code::SHOULD
@@ -118,3 +170,33 @@ Request and response parameters MUST NOT be included more than once.
 
 Client::AccessToken::Request::MUST
 The client MUST use the HTTP "POST" method when making access token requests.
+
+AS::AccessToken::RedirectURI::Request::MUST
+4.1.3.  Access Token Request
+The authorization server MUST Ensure that the "redirect_uri"
+parameter is present if the "redirect_uri" parameter was included
+in the initial authorization request as described in Section 4.1.1.
+When "redirect_uri" is included ensure that their values are identical.
+
+AS::TokenEndpoint::ClientAuthN::Security::MUST
+The authorization server MUST require client authentication for
+confidential clients.
+    HTTP Basic Authentication.
+The authorization server MUST require client authentication for
+any client that was issued client credentials or with other
+authentication requirements (mTLS, JWT, Web AuthN, Custom).
+The authorization server MUST authenticate the client if client
+authentication is included.
+
+AS::AccessToken::Expiry::SHOULD
+The authorization server MAY NOT include 'expires_in' parameter in its
+response, against the actual RECOMMENDED practice of including it (section 5.1),
+If omitted, the authorization server SHOULD provide the expiration time via
+other means or document the default value.
+
+AS::ClientRegistration::MUST
+AS::ACG::Request::MUST
+The authorization server MUST require public clients and SHOULD require
+confidential clients to register their redirection URIs.
+If a redirection URI is provided in the request, the authorization server MUST
+validate it against the registered value.
