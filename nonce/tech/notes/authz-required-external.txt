@@ -1,0 +1,26 @@
+Dependencies on External Libraries
+
+RFC 6749 OAuth 2.0
+Section 2.3 Client Authentication
+Section 2.3.1 Client Password
+    Need support for HTTP Basic Authentication scheme
+    RFC 2617, updated by RFC 7235
+    https://datatracker.ietf.org/doc/html/rfc2617
+    https://datatracker.ietf.org/doc/html/rfc7235
+
+
+https://datatracker.ietf.org/doc/html/rfc6750
+The OAuth 2.0 Authorization Framework: Bearer Token Usage
+
+https://openid.net/specs/openid-connect-basic-1_0.html
+OpenID Connect Basic Client Implementer's Guide 1.0 - draft 40
+
+https://datatracker.ietf.org/doc/html/rfc6819
+OAuth 2.0 Threat Model and Security Considerations
+
+CrossReference: Useful Background Material.
+https://datatracker.ietf.org/doc/html/rfc7523
+JSON Web Token (JWT) Profile for OAuth 2.0 Client Authentication and Authorization Grants
+
+https://openid.net/specs/openid-heart-oauth2-1_0.html
+Health Relationship Trust Profile for OAuth 2.0 - openid-heart-oauth2-1_0

@@ -1,0 +1,55 @@
+Section 6 Refreshing an Access Token
+    Authenticate the client credentials.
+    Validate the refresh token.
+    Issue a new access token and a refresh token
+
+- Contract
+    AS::Client::AuthN::Security::MUST
+    AS::TokenEndpoint::ClientAuthN::Security::MUST
+
+- Preconfigured State (Global. Well-known.)
+    AS::TokenEndpoint
+    access_token
+
+-Input
+    REQUIRED 'grant_type' = 'refresh_token'
+    REQUIRED 'refresh_token' = SOME AuthzCodeFlow::B::Output::refresh_token
+    OPTIONAL 'scope' = s IF AuthzCodeFlow::B::Output::scope = SOME s
+    REQUIRED 'client_id'
+    REQUIRED 'client_secret' IF ClientType = 'confidential'
+
+-Output
+    Section 5.1
+    Access token.
+    Optional Refresh token.
+    REQUIRED access_token = <opaque string>
+    REQUIRED token_type = <opaque string>
+    RECOMMENDED expires_in = <number of seconds>
+        AS::ACG::AccessToken::Expiry::SHOULD
+    OPTIONAL refresh_token' = <opaque string>
+    CONDITIONAL scope
+        OPTIONAL scope = s IF A::Input::scope = SOME s
+            if scope is identical to the scope requested by the client.
+        REQUIRED scope !=  A::Input::scope
+        REQUIRED scope if A::Input::'scope = NONE
+
+-Effects
+    The authorization server MAY issue a new refresh token, in which case
+    the client MUST discard the old refresh token and replace it with the
+    new refresh token.
+    The authorization server MAY revoke the old refresh token after issuing a
+    new refresh token to the client.
+    If a new refresh token is issued, the refresh token scope MUST be
+    identical to that of the refresh token included by the client in the
+    request.
+
+    update AS::access_token_store
+        INSERT INTO access_token_store (client id, access token, token_type, expires_in,
+            refresh token', scope, timestamp).
+        INSERT INTO revoked_refresh_token_store(client_id, refresh_token, token_type, timestamp)
+    update Client::access_token_store
+        DELETE FROM access_token_store WHERE client_id=? AND access_token=?
+        if refresh_token' != refresh_token
+            DELETE FROM refresh_token_store WHERE client_id=? AND refresh_token=?
+        INSERT INTO access_token_store (client id, access_token, token_type,
+                                 expires_in, refresh_token, scope, timestamp)

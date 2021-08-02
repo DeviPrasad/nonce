@@ -1,0 +1,5 @@
+
+The client ID is presented at the token endpoint, and when combined with 
+a client secret the client ID can authenticate the client throughout the
+authorization delegation process of OAuth.
+

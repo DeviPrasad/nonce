@@ -1,4 +1,12 @@
+The OAuth 2.0 Authorization Framework
+https://datatracker.ietf.org/doc/html/rfc6749
+nonce/rfc/rfc6749-oauth20-framework.pdf
+
 Section 4.1 Authorization Code Grant (ACG)
+Handle: AuthzCodeFlow
+The authorization code grant issues a temporary credential,
+the authorization code, to represent the resource owner’s delegation
+to the client,
 
 - Part A. Authenticate the resource owner and obtain authorization code.
     Authenticate RO.
@@ -93,33 +101,40 @@ Section 4.1 Authorization Code Grant (ACG)
         Conditional Required 'client_id' = A::Input::'client_id'
 
     - Output
+        Section 5.1
         Access token.
         Optional Refresh token.
-        Section 5.1
         REQUIRED 'access_token' = <opaque string>
         REQUIRED 'token_type' = <opaque string>
         RECOMMENDED 'expires_in' = <number of seconds>
             AS::ACG::AccessToken::Expiry::SHOULD
         OPTIONAL 'refresh_token' = <opaque string>
         CONDITIONAL scope
-            OPTIONAL 'scope' = SOME A::Input::'scope'
+            OPTIONAL scope = s IF A::Input::scope = SOME s
                 if 'scope' is identical to the scope requested by the client.
             REQUIRED 'scope' !=  A::Input::'scope'
             REQUIRED 'scope' if A::Input::'scope' is NONE
-
+*****CONTRACT****
+The authorization server MUST include the HTTP "Cache-Control" response header
+field [RFC2616] with a value of "no-store" in any response containing tokens,
+credentials, or other sensitive information, as well as the "Pragma" response
+header field [RFC2616] with a value of "no-cache".
+****************
     - Effects
         AuthorizationServer
             Precondition: token request is valid.
-                copy the just expired tokens to ExpiredTokenStore.
-                    timestamp with the retired tokens.
-                update TokenStore ('client id', 'access token', 'refresh token', 'timestamp').
+                revoke/retire the just expired tokens to revoked_token_store.
+                    timestamp the retired tokens.
+                update access_tken_store
+                    (client id, access token, token_type, expires_in,
+                        refresh token, scope, timestamp).
 
 
 
 Implementation - Mandatory Requirements, Guidelines, and Rules.
 
 AS::ACG::Request::MUST
-AS::ClientRegistration::MUST
+AS::Client::RedirectURI::Registration::MUST
 The authorization server MUST require public clients and SHOULD require
 confidential clients to register their redirection URIs.
 If a redirection URI is provided in the request, the authorization server MUST
@@ -200,3 +215,8 @@ The authorization server MUST require public clients and SHOULD require
 confidential clients to register their redirection URIs.
 If a redirection URI is provided in the request, the authorization server MUST
 validate it against the registered value.
+
+AS::Client::AuthN::Security::MUST
+If the client type is confidential or the client was issued client credentials
+(or assigned other authentication requirements), the client MUST authenticate
+with the  authorization server as described in Section 3.2.1.

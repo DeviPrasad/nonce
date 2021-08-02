@@ -1,0 +1,46 @@
+https://datatracker.ietf.org/doc/html/rfc7591
+OAuth 2.0 Dynamic Client Registration Protocol
+nonce/rfc/rfc7592-oauth-dyn-client-reg.pdf
+
+A software API deployment typically has an associated OAuth 2.0 authorization
+server as well as a client registration endpoint.
+
+Client Registration Endpoint
+OAuth 2.0 endpoint through which a client can be registered at an
+authorization server.
+
+Initial Access Token
+OAuth 2.0 access token optionally issued by an authorization server to a
+developer or client and used to authorize calls to the client registration
+endpoint.
+
+Software API Deployment
+A deployed instance of a software API that is protected by OAuth 2.0
+(a protected resource) in a particular deployment domain.
+For any software API, there may be one or more deployments.
+A software API deployment typically has an associated OAuth 2.0
+authorization server as well as a client registration endpoint.
+
+Software Statement
+A digitally signed or MACed JSON Web Token (JWT) [RFC7519] that
+asserts metadata values about the client software.
+
+https://datatracker.ietf.org/doc/html/rfc7519
+JSON Web Token (JWT)
+nonce/rfc/rfc7519-json-web-token.pdf
+Updated by rfc7797 and rfc8725.
+
+In some cases, a software statement will be issued directly by the client
+developer.
+In other cases, a software statement will be issued by a third-party
+organization for use by the client developer.
+A software statement can be presented to an authorization server as part
+of a client registration request.
+
+https://datatracker.ietf.org/doc/html/rfc7797
+JSON Web Signature (JWS) Unencoded Payload Option
+nonce/rfc/rfc-jws.pdf
+
+https://datatracker.ietf.org/doc/html/rfc8725
+JSON Web Token Best Current Practices
+nonce/rfc/rfc8725-jwt-best-cur-practices.pdf

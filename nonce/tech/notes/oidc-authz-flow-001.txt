@@ -1,0 +1,36 @@
+OIDC is defined in terms of
+    Authentication built on top of OAuth 2.0 and
+    The notion of Claims to communicate information about the End-User
+OIDC includes descriptions of the security and privacy aspects of the framework.
+
+Required Technical Understanding of the OAuth 2.0.
+The OAuth 2.0 Authorization Framework [RFC6749] and OAuth 2.0 Bearer Token 
+Usage [RFC6750] specifications provide a general framework for third-party 
+applications to obtain and use limited access to HTTP resources. They define 
+mechanisms to obtain and use Access Tokens to access resources but DO NOT 
+define standard methods to provide identity information.
+
+User Managed Access (UMA) protocol is brings enhancements to OAuth 2.0, in order
+to allow the resource owner to authorize a different user. UMA employs OAuth to
+create a system capable of user-to-user delegation.
+
+OAuth 2.0 defines a protocol for delegating access rights.
+The OAuth 2.0 protocol allows a resource owner to delegate access to a
+protected resource for a client application.
+OAuth doesn’t define a mechanism for user-to-user delegation. In other
+words, it cannot be used for impersonation.
+Without profiling OAuth 2.0, it is incapable of providing information about 
+the authentication of an End-User.
+https://openid.net/specs/openid-heart-oauth2-1_0.html
+
+
+OIDC implements authentication as an extension to the OAuth 2.0 authorization process.
+The authentication process results in a JSON Web Token (JWT), called an ID Token.
+
+OAuth 2.0 Authentication Servers implementing OpenID Connect are also referred to as
+OpenID Providers (OPs).
+OAuth 2.0 Clients using OpenID Connect are also referred to as Relying Parties (RPs).
+
+OIDC introduces OpenID Connect Discovery 1.0 mechanism helping Relying Party/client to
+obtain configuration information about the OpenID Provider, including its
+Authorization Endpoint and Token Endpoint locations.

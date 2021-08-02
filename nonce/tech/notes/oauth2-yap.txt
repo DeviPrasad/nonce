@@ -1,0 +1,45 @@
+
+Simple Authentication and Security Layer (SASL)
+
+A Set of Simple Authentication and Security Layer (SASL) Mechanisms for OAuth
+https://datatracker.ietf.org/doc/html/rfc7628/
+nonce/rfc/rfc7628-SASL-for-OAuth.pdf
+(Proposed Standard)
+   This defines how an application client uses credentials
+   obtained via OAuth over the Simple Authentication and Security Layer
+   (SASL) to access a protected resource at a resource server.
+   Thereby, it enables schemes defined within the OAuth framework for
+   non-HTTP-based application protocols.
+
+
+Authentication and Authorization for Constrained Environments (ACE)
+using the OAuth 2.0 Framework (ACE-OAuth) draft-ietf-ace-oauth-authz-43.
+https://datatracker.ietf.org/doc/html/draft-ietf-ace-oauth-authz
+
+This specification defines a framework for authentication and
+authorization in Internet of Things (IoT) environments called ACE-
+OAuth.  The framework is based on a set of building blocks including
+OAuth 2.0 and the Constrained Application Protocol (CoAP), thus
+transforming a well-known and widely used authorization solution into
+a form suitable for IoT devices.
+
+
+OAuth 2.0 for Native Apps
+https://datatracker.ietf.org/doc/html/rfc8252
+nonce/rfc/rfc8252-oauth20-for-native-apps.pdf
+
+
+https://tools.ietf.org/html/rfc6750
+Bearer Token Usage
+nonce/rfc/rfc6750-bearer-token-usage.pdf
+
+CrossReference: Useful Background Material.
+https://datatracker.ietf.org/doc/html/rfc6819
+OAuth 2.0 Threat Model and Security Considerations
+nonce/rfc/rfc6819-oauth2-threat-model-security.pdf
+
+https://datatracker.ietf.org/doc/html/rfc7523
+JSON Web Token (JWT) Profile for OAuth 2.0 Client Authentication and Authorization Grants
+
+https://openid.net/specs/openid-heart-oauth2-1_0.html
+Health Relationship Trust Profile for OAuth 2.0 - openid-heart-oauth2-1_0
