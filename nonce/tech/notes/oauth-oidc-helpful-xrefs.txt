@@ -1,0 +1,9 @@
+
+https://darutk.medium.com/diagrams-and-movies-of-all-the-oauth-2-0-flows-194f3c3ade85
+Diagrams And Movies Of All The OAuth 2.0 Flows
+Takahiko Kawasaki
+
+https://darutk.medium.com/new-architecture-of-oauth-2-0-and-openid-connect-implementation-18f408f9338d
+New Architecture of OAuth 2.0 and OpenID Connect Implementation
+~Semi-Hosted Service Pattern~
+

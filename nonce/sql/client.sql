@@ -1,6 +1,4 @@
 
-
-
 CREATE TABLE IF NOT EXISTS nonce_client (
     pk                INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY;
     -- PGSQL pk                SERIAL;
