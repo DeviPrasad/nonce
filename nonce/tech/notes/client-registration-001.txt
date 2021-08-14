@@ -4,8 +4,12 @@ https://datatracker.ietf.org/doc/html/rfc6749
 Section 2 Client Registration
 
 OAuth 2.0 does not require a direct interaction between the
-client and the authorization server.  When supported by the
-authorization server, registration c
+client and the authorization server.
+
+When supported by the authorization server, registration can be
+accomplished using an assertion:
+    the client per se issues an assertion ('self-issued') or
+    a third-party issues an assertion ('third-party issued')
 
 The authorization server may perform client discovery using a
 trusted channel.
@@ -27,10 +31,7 @@ distributed client with both
     1. a confidential server-based component, and
     2. a public browser-based component).
 
-Dhaaranaa implements the confidential client in Rust, while the public
-client is implemented in TypeScript.
-
-Three Client profiles are defined
+The RFC defines three Client profiles
     1. web application - a confidential client running on a web server.
     2. user-agent-based application.
         a public client.
@@ -38,14 +39,13 @@ Three Client profiles are defined
     3. native application.
         installed and executed on a device owned by resource owner.
 
-
 2.2 Client Identifier.
 
     1. Authorization server issues an identifier to the registered client.
     2. Client identifier is unique in the scope of the authorization server.
     3. OAuth 2.0 DOES NOT specify the  structure or size of
         the client identifiers.
-    4. The client identifier is not a secret; it is exposed to the
+    4. The client identifier is NOT a secret; it is exposed to the
         resource owner.
     5. Client Id MUST NOT be used alone for client authentication.
 
@@ -107,3 +107,70 @@ client credentials in the request-body using
     client_secret
 The parameters can only be transmitted in the request-body and
 MUST NOT be included in the request URI.
+
+-*---**---*--**---*--**---*--**---*--**---*--**---*--*---*-
+
+Indus implementation notes.
+
+Client id (client_id) is a case sensitive ASCII string.
+It has a minimum length of 24 hex charcters, followed by an optional,
+user-defined string with a maximum length of 200 bytes.
+
+The mandatory part represents a 96-bit random number represented as a
+hex string of length 24 characters.
+
+It should be noted that client_id will be used as an 'audience' value
+in JWT claims. They are case-senstive when used contexts such as OIDC.
+
+Indus authorization server defines a life-cycle for client application,
+consisting of four phases:
+    Development
+    Confidential
+    Pilot
+    Publish
+Each phase governs various run-time parameters and security requirements of
+the interactions between clients and the authorization server.
+
+The lifecycle and other properties are managed using the Dynamic Client
+Registration Management Protocol implemented by Indus.
+
+In the Pilot and Publish phases, the Indus authorization server requires
+that
+    one or more redirect URLs are registered by the client application.
+    all redirect URLs are https.
+    redirection employs an exact match of a previously registered URL.
+    (https://oauth.net/advisories/2014-1-covert-redirect/)
+    HTTP headers carry X-Frame-Options.
+    (https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options)
+
+These measures are mandatory for preventing Clickjacking and Open Redirect attacks.
+
+Whenever applicable, Indus MUST include the following HTTP response headers:
+    Cache-Control: no-store
+    Pragma: no-cache
+
+
+Oauth 2.0 Dynamic Registration - RFC 7591
+(https://datatracker.ietf.org/doc/html/rfc7591)
+
+OAuth 2.0 Dynamic Client Registration Management Protocol - RFC 7592
+(https://datatracker.ietf.org/doc/html/rfc7592)
+This specification extends the core registration specification by
+defining a set of methods for management of dynamic OAuth 2.0 client
+registrations beyond those defined in the core registration
+specification.
+This specification provides methods for the current registration
+state of a client to be queried at the authorization server, methods
+for the registration of a client to be updated at the authorization
+server, and methods for the client to be unregistered from the
+authorization server.
+
+OpenID Connect Dynamic Client Registration 1.0 incorporating errata set 1
+(https://openid.net/specs/openid-connect-registration-1_0.html)
+This specification defines how an OpenID Connect Relying Party can
+dynamically register with the End-User's OpenID Provider, supplying
+information about itself to the OpenID Provider, and obtaining information
+needed to use it, including the OAuth 2.0 Client ID for this Relying Party.
+    A client can dynamically register and obtain OAuth 2.0 client_id.
+
+https://openid.net/specs/openid-connect-registration-1_0.html#ClientMetadata

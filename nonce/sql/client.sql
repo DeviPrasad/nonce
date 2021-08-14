@@ -1,24 +1,27 @@
 
-CREATE TABLE IF NOT EXISTS nonce_client (
-    pk                INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY;
-    -- PGSQL pk                SERIAL;
-	id      	      varchar(255) NOT NULL,
-	client_name  	  text NOT NULL,
+DROP TABLE IF EXISTS indus_client;
+
+CREATE TABLE IF NOT EXISTS indus_client (
+    sln               INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY;
+    -- PGSQL sln      SERIAL;
+	client_id      	  varchar(255) NOT NULL,
 	client_secret  	  text NOT NULL,
 	redirect_uris  	  text NOT NULL,
 	grant_types  	  text NOT NULL,
 	response_types    text NOT NULL,
 	scope  			  text NOT NULL,
 	owner  			  text NOT NULL,
+	client_name  	  text NOT NULL,
 	policy_uri  	  text NOT NULL,
 	tos_uri  		  text NOT NULL,
 	client_uri  	  text NOT NULL,
 	logo_uri  		  text NOT NULL,
 	contacts  		  text NOT NULL,
 	confidential      boolean NOT NULL,
+    client_profile    enum (webapp, user-agent, native, device, pc)
     -- auth_method='none' when confidential=false
     token_endpoint_auth_method   VARCHAR(32) NOT NULL,
-    -- UPDATE hydra_client SET token_endpoint_auth_signing_alg = 'RS256' WHERE token_endpoint_auth_method = 'private_key_jwt';
+    -- UPDATE indus_client SET token_endpoint_auth_signing_alg = 'RS256' WHERE token_endpoint_auth_method = 'private_key_jwt';
     token_endpoint_auth_signing_alg VARCHAR(32) NOT NULL,
     client_secret_expires_at     INTEGER NOT NULL DEFAULT 0,
     sector_identifier_uri  TEXT;,
@@ -44,6 +47,3 @@ CREATE TABLE IF NOT EXISTS nonce_client (
 
     CREATE UNIQUE INDEX nonce_client_index_id ON nonce_client (id);
 );
-
--- +migrate Down
-DROP TABLE IF EXISTS hydra_client;
