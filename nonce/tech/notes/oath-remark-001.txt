@@ -19,3 +19,7 @@ If the authorization server issues a refresh token, it is included
 when issuing an access token.
 refresh tokens are intended for use only with authorization servers
 and are never sent to resource servers.
+
+While The authorization code grant type was originally optimized for
+confidential clients, the addition of PKCE enables public clients to use
+this grant type as well.

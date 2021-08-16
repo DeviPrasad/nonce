@@ -24,6 +24,8 @@ When registering a client, the client developer SHALL:
 Client Types
     confidential
     public
+        webapp
+        native
 
 A client may be implemented as a distributed set of components, each
 with a different client type and security context, that is, a
