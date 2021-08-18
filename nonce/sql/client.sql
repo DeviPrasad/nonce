@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS client_secret (
     public_key      VARBINARY(512) DEFAULT NULL,
     material        VARBINARY(32) DEFAULT NULL
 );
-FOREIGN KEY (client_id) REFERNCES client_desc(client_id);
+-- FOREIGN KEY (client_id) REFERNCES client_desc(client_id);
 
 CREATE TABLE IF NOT EXISTS client_tokens (
     client_id      	      BINARY(12) NOT NULL UNIQUE,
