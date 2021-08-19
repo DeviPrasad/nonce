@@ -1,0 +1,71 @@
+OAuth 2.0 Token Revocation
+https://datatracker.ietf.org/doc/html/rfc7009
+(rfc7009-oauth2-token-revocation.pdf)
+
+A revocation request will invalidate the actual token and, if applicable,
+other tokens based on the same authorization grant and the authorization
+grant itself. Implementations MUST support the revocation of
+refresh tokens and SHOULD support the revocation of access tokens.
+    Notifying the authorization server that the token is no longer needed
+    allows the authorization server to clean up data associated with that
+    token (e.g., session data) and the underlying authorization grant.
+
+Token revocation endpoint.
+    HTTP Post request over TLS.
+    Clients MUST verify that the URL is an HTTPS URL.
+    The client requests the revocation of a particular token by making an
+    HTTP POST request to the token revocation endpoint URL.
+*-+-*-+-*-+-*-+-*-+-*-+-*-+-**-+-*-+-*-+-*-+-*-+-*-+-*-+-**-+-*-+-*-+-*-+-*
+Comapre this with the requirement for the autorization endpoint.
+It MUST support the use of HTTP GET method, and MAY support the use of
+HTPP POST method.
+*-+-*-+-*-+-*-+-*-+-*-+-*-+-**-+-*-+-*-+-*-+-*-+-*-+-*-+-**-+-*-+-*-+-*-+-*
+Revocation request.
+The client includess the following parameters using the
+"application/x-www-form-urlencoded" format in the HTTP request entity-body:
+    token   REQUIRED.  The token that the client wants to get revoked.
+    token_type_hint  OPTIONAL.
+        A hint about the type of the token submitted for revocation.
+        This specification defines two values:
+            access_token.
+            refresh_token.
+
+Example.
+    POST /revoke HTTP/1.1
+    Host: server.example.com
+    Accept: application/json
+    Content-Type: application/x-www-form-urlencoded
+    Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
+    token=JSbdNrF...FOtMJw
+    token_type_hint=refresh_token
+
+if confidential client
+    validates the client credentials.
+verify whether the token was issued to the client making the revocation request.
+if this validation fails
+    immediately invalidate the token.
+revoke all related tokens and the underlying authorization grant.
+if the token passed to the request is a refresh token
+    SHOULD also invalidate all access tokens based on the same authorization
+    grant .
+if the token passed to the request is an access token
+    MAY revoke the respective refresh token as well.
+ignore an invalid token type hint value
+    invalid hint does not influence the revocation response.
+
+Revocation Response
+    The authorization server responds with HTTP status code 200 if the
+    token has been revoked successfully or if the client submitted an
+    invalid token.
+    Reuses codes from RFC6749, Section 5.2 Error Response .
+    An additional error code is defined for the token revocation endpoint:
+    unsupported_token_type:
+        The authorization server does not support the revocation of the
+        presented token type.  That is, the client tried to revoke an
+        access token on a server not supporting this feature.
+
+If the server responds with HTTP status code 503, the client must
+assume the token still exists and may retry after a reasonable delay.
+    The server may include a "Retry-After" header in the response to
+    indicate how long the service is expected to be unavailable to the
+    requesting client.

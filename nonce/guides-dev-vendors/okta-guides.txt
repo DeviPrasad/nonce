@@ -1,0 +1,9 @@
+okta guides.
+
+https://developer.okta.com/docs/guides/revoke-tokens/removeusersess/
+
+https://developer.okta.com
+https://developer.okta.com/docs/reference/api/sessions/
+https://developer.okta.com/docs/guides/revoke-tokens/removeusersess/
+https://developer.okta.com/docs/reference/core-okta-api/
+https://developer.okta.com/docs/reference/api/authorization-servers/

@@ -1,0 +1,169 @@
+
+OAuth 2.0 Token Introspection
+https://datatracker.ietf.org/doc/html/rfc7662
+(rfc7662-oauth2-token-introspection.pdf)
+
+
+Resource Indicators for OAuth 2.0
+https://datatracker.ietf.org/doc/html/rfc8707
+(rfc8707-resource-indicators-for-oauth2.pdf)
+
+A protected resource can query an OAuth 2.0 authorization server
+to determine the active state of an OAuth 2.0 token and to determine
+the additional information about this token.
+
+The authorization server can convey information about the authorization
+context of the token.
+The following pieces of information are often vital to protected resources
+making authorization decisions based on the tokens being presented.
+    the current validity of the token.
+    what rights of access the token carries - the approved scopes.
+    information about the context in which the token was issued, including
+        who authorized the token?
+        which client it was issued to?
+
+Introspection Request
+    HTTP POST over TLS.
+    Parameters sent as "application/x-www-form-urlencoded"
+        one mandatory parameter, and another optional.
+    token
+        REQUIRED.  The string value of the token.
+        ("access_token" value or the "refresh_token" value in OAuth 2.0)
+    token_type_hint
+        OPTIONAL. AS may use this to optimize the token lookup.
+        Values for this field are defined in the "OAuth Token Type Hints"
+        registry defined in OAuth Token Revocation [RFC7009].
+        OAuth 2.0 Token Revocation
+        https://datatracker.ietf.org/doc/html/rfc7009
+        (rfc7009-oauth2-token-revocation.pdf)
+
+To prevent the values of access tokens from leaking into server-side
+logs via query parameters, an authorization server offering token
+introspection MAY disallow the use of HTTP GET on the introspection
+endpoint and instead require the HTTP POST method to be used at the
+introspection endpoint.
+
+It is expected that this endpoint is not made publicly available to
+developers. End-user clients should not be allowed to use this endpoint
+since the response may contain privileged information that developers
+should not have access to. One way to protect the endpoint is to put it
+on an internal server that is not accessible from the outside world,
+or it could be protected with HTTP basic auth.
+
+[Section 4, Security Considerations] notes that the authorization server
+    MUST require authentication of protected resources that need to
+    access the introspection endpoint, and
+    SHOULD require protected resources to be specifically authorized to
+    call the introspection endpoint.
+        these credentials could take the form of any valid client
+    authentication mechanism used with the token endpoint, an OAuth 2.0
+    access token, or other HTTP authorization or authentication
+    mechanism.
+----
+    The introspection endpoint could be protected with HTTP basic auth:
+    POST /introspect HTTP/1.1
+    Host: authorization-server.com
+    Accept: application/json
+    Content-Type: application/x-www-form-urlencoded
+    Authorization: Basic Y4NmE4MzFhZGFkNzU2YWRhN
+
+    token=c1MGYwNDJiYmYxNDFkZjVkOGI0MSAgLQ
+-----
+Since resource servers using token introspection rely on the authorization
+server to determine the state of a token, the authorization server MUST
+perform all applicable checks against a token's state.
+    If the token can expire, the authorization server MUST determine
+    whether or not the token has expired.
+    If the token can be issued before it is able to be used, the
+    authorization server MUST determine whether or not a token's valid
+    period has started yet.
+    If the token can be revoked after it was issued, the authorization
+    server MUST determine whether or not such a revocation has taken
+    place.
+    If the token has been signed, the authorization server MUST
+    validate the signature.
+    If the token can be used only at certain resource servers, the
+    authorization server MUST determine whether or not the token can
+    be used at the resource server making the introspection call.
+
+To avoid disclosing the internal state of the authorization server,
+an introspection response for an inactive token SHOULD NOT contain
+any additional claims beyond the required "active" claim (with its
+value set to "false").
+
+A single piece of software acting as both a client and a protected
+resource MAY reuse the same credentials between the token endpoint and
+the introspection endpoint, in which case, the authorization server
+MAY require separate credentials for each mode.
+(INDUS makes this a MUST)
+
+Introspection Response
+    active
+        REQUIRED.  Boolean indicator of whether or not the presented token
+        is currently active.
+    scope
+      OPTIONAL.  A JSON string containing a space-separated list of
+      scopes associated with this token.
+    client_id
+      OPTIONAL.  Client identifier for the OAuth 2.0 client that
+      requested this token. The client identifier for the OAuth 2.0 client
+      that the token was issued to.
+    username
+      OPTIONAL.  Human-readable identifier for the resource owner who
+      authorized this token.
+    token_type
+      OPTIONAL.  Type of the token as defined in Section 5.1 of OAuth
+      2.0
+    exp
+      OPTIONAL. Integer timestamp.
+    iat
+      OPTIONAL. Integer timestamp.
+    nbf
+      OPTIONAL.  Integer timestamp.
+    sub
+      OPTIONAL.  Subject of the token, as defined in JWT [RFC7519].
+      Usually a machine-readable identifier of the resource owner who
+      authorized this token.
+   aud
+      OPTIONAL.  Service-specific string identifier or list of string
+      identifiers representing the intended audience for this token, as
+      defined in JWT [RFC7519].
+   iss
+      OPTIONAL.  String representing the issuer of this token, as
+      defined in JWT [RFC7519].
+   jti
+      OPTIONAL.  String identifier for the token, as defined in JWT
+      [RFC7519].
+
+How long should a protected resource cache the response from the
+instrospection endpoint?
+    An acceptable cache validity duration needs to be carefully considered
+    given the concerns and sensitivities of the protected resource being
+    accessed and the likelihood of a token being revoked or invalidated
+    in the interim period.
+        Highly sensitive environments can opt to disable caching entirely
+        on the protected resource to eliminate the risk of stale cached
+        information entirely, again at the cost of increased network traffic
+        and server load.
+            If the response contains the "exp" parameter (expiration),
+            the response MUST NOT be cached beyond the time indicated therein.
+
+
+How to prevent a protected resource from learning "too much"?
+    The authorization server MAY respond differently to different
+    protected resources making the same request.  For instance, an
+    authorization server MAY limit which scopes from a given token are
+    returned for each protected resource to prevent a protected resource
+    from learning more about the larger network than is necessary for its
+    operation.
+
+
+Recommendations about the introspection endpoint response
+    If the introspection call is properly authorized but the token is not
+    active, does not exist on this server, or the protected resource is
+    not allowed to introspect this particular token, then the
+    authorization server MUST return an introspection response with the
+    "active" field set to "false".  Note that to avoid disclosing too
+    much of the authorization server's state to a third party, the
+    authorization server SHOULD NOT include any additional information
+    about an inactive token, including why the token is inactive.
