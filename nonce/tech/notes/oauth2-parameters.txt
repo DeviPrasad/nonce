@@ -1,0 +1,17 @@
+
+OAuth Parameters
+https://www.iana.org/assignments/oauth-parameters/oauth-parameters.xhtml#token-types
+
+
+These are the registries included in the document:
+    OAuth Access Token Types
+    OAuth Authorization Endpoint Response Types
+    OAuth Extensions Error Registry
+    OAuth Parameters
+    OAuth Token Type Hints
+    OAuth URI
+    OAuth Dynamic Client Registration Metadata
+    OAuth Token Endpoint Authentication Methods
+    PKCE Code Challenge Methods
+    OAuth Token Introspection Response
+    OAuth Authorization Server Metadata

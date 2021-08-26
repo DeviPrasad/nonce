@@ -1,0 +1,78 @@
+
+Lengths or Sizes of (Bearer) Tokens in the Wild.
+
+https://developers.facebook.com/docs/facebook-login/access-tokens
+Access Token Length
+Expect that the length of all access token types will change over
+time as Facebook makes changes to what is stored in them and how
+they are encoded. You can expect that they will grow and shrink
+over time. Please use a variable length data type without a
+specific maximum size to store access tokens.
+
+https://developers.google.com/identity/protocols/oauth2#size
+Token size
+Tokens can vary in size, up to the following limits:
+Authorization codes: 256 bytes
+Access tokens: 2048 bytes
+Refresh tokens: 512 bytes
+Access tokens returned by Google Cloud's Security Token Service API
+are structured similarly to Google API OAuth 2.0 access tokens but
+have different token size limits. For details, see the API documentation.
+
+Google reserves the right to change token size within these limits,
+and your application must support variable token sizes accordingly.
+
+Google Cloud API
+Security Token Service
+https://cloud.google.com/iam/docs/reference/sts/rest
+
+https://cloud.google.com/iam/docs/reference/sts/rest/v1/TopLevel/token#response-body
+access_token string
+An OAuth 2.0 security token, issued by Google, in response to the
+token exchange request.
+
+Tokens can vary in size, depending in part on the size of mapped
+claims, up to a maximum of 12288 bytes (12 KB). Google reserves the
+right to change the token size and the maximum length at any time.
+
+
+Large tokens result in larger HTTP request headers. If not configured, reverse
+proxies may drop such requests because the headers exceed configured limits.
+In the case of NGINX, one needs to use the right directive:
+large_client_header_buffers number size;
+http://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers
+http {
+  ...
+  client_body_buffer_size     32k;
+  client_header_buffer_size   8k;
+  large_client_header_buffers 8 64k;
+  ...
+}.
+
+Module ngx_http_auth_jwt_module
+http://nginx.org/en/docs/http/ngx_http_auth_jwt_module.html
+
+Validating OAuth 2.0 Access Tokens with NGINX and NGINX Plus
+Liam Crilly of F5  May 13, 2019
+https://www.nginx.com/blog/validating-oauth-2-0-access-tokens-nginx/
+
+TOKEN LIFECYCLE
+-------------------------------------------|-------------------------------------
+The 'access_token Lifecycle                |      The 'refresh_token' Lifecycle
+-------------------------------------------|-------------------------------------
+Creation
+    Whenever the user logs in, or
+    a refreshToken api is called.          |    Whenever the user logs in
+
+Expiration
+    After M minutes, where M varies from        After a few days of inactivity.
+    a few minutes to a few hundreds of     |
+    minutes.
+
+Inavlidation
+    When the refresh_token is revoked.          When the refresh_token expires.
+    If not used for some duration.              When not used for a few days.
+        (few hours to days).                    When the refresh_token is revoked.
+    When a new pair of access_token and         When a new pair of access_token and
+    refresh_token is created.              |    refresh_token is created.
+-------------------------------------------|-------------------------------------
