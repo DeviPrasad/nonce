@@ -1,0 +1,68 @@
+All about tokens in OAuth 2.0
+
+A token may be encoded as
+    an opaque sequence of bytes (sometimes referred to as a 'Handle').
+    a structured unit of information.
+        JWT
+            Unsecured.
+            Signed.
+            Encrypted.
+            Signed and Encrypted.
+            Nested
+        SAML
+
+Depending upon the context and purpose of its use, a token falls into
+one of the following groups:
+    Access Token.
+        Client uses authorization grant to obtain an access token.
+    Initial Access Token.
+        RFC 7592. OAuth 2.0 Dynamic Registation Management.
+    Registration Access Token.
+        RFC 7592. OAuth 2.0 Dynamic Registation Management.
+        A bearer token
+    Refresh Token.
+    Identity Token.
+    Security Token potentially issued by some STS.
+        Client Authentication Token
+        Client Authorization Token
+
+    JWT is a string representing a set of claims as a JSON object.
+    The string is encoded in a JWS or JWE, enabling the claims to
+    be digitally signed or MACed and/or encrypted.
+
+    JWT Claims Set is a JSON object that contains the claims conveyed
+    by the JWT.
+
+    A Claim is a piece of information asserted about a subject.
+    A claim is represented as a name/value pair consisting of a
+    Claim Name and a Claim Value.
+
+Token
+    JWT Bearer Token grant type.
+        urn:ietf:params:oauth:grant-type:jwt-bearer
+    RFC 7523 - JSON Web Token (JWT) Profile for OAuth 2.0
+            Client Authentication and Authorization Grants.
+        This specification defines the use of a JSON Web Token (JWT) Bearer
+        Token as a means for requesting an OAuth 2.0 access token as well as
+        for client authentication.
+
+JSON Web Token (JWT) is a JSON-based [RFC7159] security token
+   encoding that enables identity and security information to be shared
+   across security domains.
+   A security token is generally issued by an
+   Identity Provider and consumed by a Relying Party that relies on its
+   content to identify the token's subject for security-related
+   purposes.
+
+https://docs.aws.amazon.com/STS/latest/APIReference/API_Credentials.html
+AWS credentials for API authentication.
+String AccessKeyId
+    The access key ID that identifies the temporary security
+    credentials.
+    Minimum length of 16. Maximum length of 128.
+Timestamp Expiration
+String SecretAccessKey
+    The secret access key that can be used to sign requests.
+String SessionToken
+    The token that users must pass to the service API to use
+    the temporary credentials.

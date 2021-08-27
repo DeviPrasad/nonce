@@ -1,0 +1,59 @@
+SAML Assertions and Claims.
+
+In general, an Assertion is a collection of Statements made by an Authority.
+    SAML authorities are sometimes called Asserting Parties
+    especially in the context of assertion generation and exchange.
+    OIDC Identity Provider is conceptually an Asserting Party.
+System entities that use/consume received assertions are known as
+Relying Parties (RP).
+    OAuth 2.0 Authorization Server (AS) may act as a RP when it
+    communicates with an STS.
+
+Assertions are usually made about a Subject, which is represented
+by the <Subject> element in SAML or the 'sub' field in OAuth 2.0 JWT.
+
+In OAuth 2.0, Security Token is an Assertion.
+An Identity Provider (IdP) gives out Security Tokens.
+
+SAML Authority asserts security information in the form of Statements
+about a subject.
+    For instance, a SAML assertion could state that the subject
+    is named “John Doe”, has an email address of john.doe@example.com, and
+    is a member of the “engineering” group.
+
+An assertion contains some basic required and optional information that
+applies to all its statements, and usually contains
+    a subject identifier,
+        if subject is not mentioned, the identity is determined through
+        other means, e.g. the certificate used for subject confirmation,
+    conditions used to validate the assertion, and
+    assertion statements.
+
+SAML defines three kinds of statements packaged within an assertion:
+    Authentication statements
+        These are created by the party that successfully authenticated
+        a user. At a minimum, they describe the particular means used
+        to authenticate the user and the specific time at which the
+        authentication took place.
+        A password-protected transport mechanism (e.g. entering a username
+        and password submitted over an SSL-protected browser session)
+    Attribute statements
+        These contain specific identifying attributes about the subject
+        (for example, that user “John Doe” has “Gold” card status).
+    Authorization decision statements
+        These define something that the subject is entitled to do
+        (for example, whether “John Doe” is permitted to access a
+            specified resource).
+
+The SAML Identity Model is a claims-based authorization system.
+Claims describe the capabilities associated with some entity in the
+system, often a user of that system. The set of claims associated with
+a given entity can be thought of as a key.
+
+Claims are used to gain access to resources. Access to a given
+protected resource is determined by comparing the claims required
+to access that resource with the claims associated with the entity
+that attempts access.
+
+SAML Claim expresses the Right over a Resource. The claim type may be an
+API Product, resource may be an API and Right may be AllowCall.
