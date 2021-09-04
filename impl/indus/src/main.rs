@@ -1,12 +1,15 @@
-use std::result::Result;
-use log::LevelFilter;
-use log4rs::append::file::FileAppender;
-use log4rs::encode::pattern::PatternEncoder;
-use log4rs::config::{Appender, Config, Root};
 mod basic;
+mod pleb;
+use std::result::Result;
+use pleb::logger;
+use basic::http::node::vertex;
 
-fn main() -> Result<(), std::io::Error>{
-    println!("Indus");
-    basic::http::node::vertex::run();
-    Ok(())
+#[tokio::main]
+async fn main() {
+    if !logger::init_logging() {
+        println!("Error - Log set up failed. Quitting. ");
+        return;
+    }
+    log::info!("Starting Indus");
+    vertex::run().await;
 }
