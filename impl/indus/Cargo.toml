@@ -1,0 +1,23 @@
+[package]
+name = "indus"
+version = "0.1.0"
+edition = "2018"
+publish = false
+authors = ["The Indus Project Developers"]
+
+[dependencies]
+tokio = { version = "1.0", features = ["full"] }
+axum = "0.2.*"
+url = "2.2.2"
+serde = "1.*"
+serde_json = "1.*"
+bytes = "1"
+headers = "0.*.*"
+chrono = "0.*.*"
+base64 = "0.*.*"
+jsonwebtoken = "7"
+jws = "0.2"
+sha2 = "0.9"
+hmac = "0.11"
+log = "0.4"
+log4rs = "1.*"
