@@ -10,7 +10,7 @@ pleb:
 	RUSTFLAGS=${PLEB_RUST_FLAGS} cargo build
 
 pleb-run:
-	RUSTFLAGS=${PLEB_RUST_FLAGS} cargo run
+	RUSTFLAGS=${PLEB_RUST_FLAGS} RUST_BACKTRACE=1 cargo run
 
 dev:
 	cargo build
