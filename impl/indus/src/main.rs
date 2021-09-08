@@ -1,6 +1,6 @@
 mod basic;
+mod oidc10;
 mod pleb;
-use std::result::Result;
 use pleb::logger;
 use basic::http::node::vertex;
 
@@ -8,7 +8,7 @@ use basic::http::node::vertex;
 async fn main() {
     if !logger::init_logging() {
         println!("Error - Log set up failed. Quitting. ");
-        return;
+        std::process::exit(1)
     }
     log::info!("Starting Indus");
     vertex::run().await;
