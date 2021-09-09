@@ -30,6 +30,9 @@ pub enum ProviderConfigError {
     EmptyIdTokenSigningAlgValues, BadIdTokenSigningAlgValue, IdTokenSigningAlgNoneNotSupported,
     EmptyIdTokenEncryptionAlgValues, BadIdTokenEncryptionAlgValue,
     EmptyConsentDisplayValues, BadConsentDisplayValue, OnlyNoneConsentDisplayValue,
+    BadClaimTypeValue,
+    EmptyClaimNames, BadClaimName,
+    BadRequestParameter, BadRequestUriParameter, BadRequireRequestUriRegistration,
     BadSource(serde_json::Error),
     Custom(String),
 }
@@ -100,6 +103,15 @@ const INDUS_ENDUSER_CONSENT_DISPLAY_VALUES: [&str; 4] = [
     "select_account" //he Authorization Server SHOULD prompt the End-User to select a user account.
 ];
 
+const INDUS_CLAIM_TYPES: [&str; 3] = [ "normal", "aggregated", "distributed" ];
+
+const INDUS_CLAIM_NAMES:[&str; 25] = [
+    "sub", "name", "given_name", "family_name", "middle_name", "nickname", "preferred_username",
+    "profile", "picture", "website", "email", "email_verified", "gender", "birthdate",
+    "zoneinfo", "locale", "phone_number", "phone_number_verified", "address", "updated_at",
+    "aadhaar", "voterid", "pan", "indus_id", "indus_key"
+];
+
 #[derive(serde::Serialize, serde::Deserialize, std::fmt::Debug)]
 pub struct ProviderConfig {
     issuer: Url,
@@ -128,7 +140,7 @@ pub struct ProviderConfig {
     token_endpoint_auth_signing_alg_values_supported: Option<Vec<String>>,
 
     display_values_supported: Vec<String>,
-    claim_types_supported: Vec<String>, //[normal, aggregated, distributed.]
+    claim_types_supported: Option<Vec<String>>, //[normal, aggregated, distributed.]
     claims_supported: Vec<String>,
     service_documentation: Url,
     claims_locales_supported: Option<bool>,
@@ -190,8 +202,21 @@ impl ProviderConfig {
             algref.sort();
             algref.dedup();
         }
+        if self.claim_types_supported.is_none() {
+            self.claim_types_supported = Some(vec!("normal".to_string()));
+        } else if self.claim_types_supported.is_some() {
+            let ctref = self.claim_types_supported.as_mut().unwrap();
+            if ctref.len() == 0 {
+                self.claim_types_supported = Some(vec!("normal".to_string()));
+            } else {
+                ctref.sort();
+                ctref.dedup();
+            }
+        }
         self.display_values_supported.sort();
         self.display_values_supported.dedup();
+        self.claims_supported.sort();
+        self.claims_supported.dedup();
     }
     // https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata
     // 3.  OpenID Provider Metadata
@@ -211,6 +236,12 @@ impl ProviderConfig {
         self.have_idtoken_signing_alg_values()?;
         self.have_id_token_encryption_alg_values()?;
         self.have_consent_display_values()?;
+        self.have_claim_types()?;
+        self.have_claim_names()?;
+        self.https_port_query_url(&self.service_documentation)?;
+        self.have_request_uri_parameter()?;
+        self.https_port_query_url(&self.op_policy_uri)?;
+        self.https_port_query_url(&self.op_tos_uri)?;
         Ok(self)
     }
     // https scheme. no port. no user name. no password. no query. no fragment.
@@ -336,6 +367,34 @@ impl ProviderConfig {
         if self.display_values_supported.len() == 1 {
             let dv = self.display_values_supported.get(0).unwrap();
             if dv.eq("none") { Err(ProviderConfigError::OnlyNoneConsentDisplayValue)? }
+        }
+        Ok(self)
+    }
+    pub fn have_claim_types(&self) -> ConfigResult<&ProviderConfig> {
+        let refct = self.claim_types_supported.as_ref().unwrap();
+        if !refct.iter().all(|ct| INDUS_CLAIM_TYPES.contains(&ct.as_str())) {
+            Err(ProviderConfigError::BadClaimTypeValue)?
+        }
+        Ok(self)
+    }
+    pub fn have_claim_names(&self) -> ConfigResult<&ProviderConfig> {
+        if self.claims_supported.len() == 0 {
+            Err(ProviderConfigError::EmptyClaimNames)?
+        }
+        if !self.claims_supported.iter().all(|ct| INDUS_CLAIM_NAMES.contains(&ct.as_str())) {
+            Err(ProviderConfigError::BadClaimName)?
+        }
+        Ok(self)
+    }
+    pub fn have_request_uri_parameter(&self) -> ConfigResult<&ProviderConfig> {
+        if !self.request_parameter_supported {
+            Err(ProviderConfigError::BadRequestParameter)?
+        }
+        if !self.request_uri_parameter_supported {
+            Err(ProviderConfigError::BadRequestUriParameter)?
+        }
+        if !self.require_request_uri_registration {
+            Err(ProviderConfigError::BadRequireRequestUriRegistration)?
         }
         Ok(self)
     }
