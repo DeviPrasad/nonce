@@ -13,7 +13,7 @@ pleb-run:
 	RUSTFLAGS=${PLEB_RUST_FLAGS} RUST_BACKTRACE=1 cargo run
 
 test:
-	RUSTFLAGS=${PLEB_RUST_FLAGS} RUST_BACKTRACE=1 cargo test -- --show-output --nocapture --color always
+	RUSTFLAGS=${PLEB_RUST_FLAGS} RUST_BACKTRACE=1 cargo test -- --show-output
 
 dev:
 	cargo build
