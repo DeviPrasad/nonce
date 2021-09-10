@@ -8,14 +8,14 @@ authors = ["The Indus Project Developers"]
 [dependencies]
 either = "1"
 tokio = { version = "1.0", features = ["full"] }
-axum = "0.2.*"
+axum = "0.2"
 url = { version = "2.2.2", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 bytes = "1"
-headers = "0.*.*"
-chrono = "0.*.*"
-base64 = "0.*.*"
+headers = "0.*"
+chrono = "0.*"
+base64 = "0.*"
 rand = "0.8"
 jsonwebtoken = "7"
 jws = "0.2"

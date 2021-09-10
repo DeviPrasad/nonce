@@ -12,8 +12,11 @@ pleb:
 pleb-run:
 	RUSTFLAGS=${PLEB_RUST_FLAGS} RUST_BACKTRACE=1 cargo run
 
-test:
+pleb-test:
 	RUSTFLAGS=${PLEB_RUST_FLAGS} RUST_BACKTRACE=1 cargo test -- --show-output
+
+test:
+	RUSTFLAGS=${PLEB_RUST_FLAGS} RUST_BACKTRACE=1 cargo test
 
 dev:
 	cargo build
@@ -22,4 +25,5 @@ dev-run:
 	cargo run
 
 clean:
-	rm -f log/*
+	cargo clean --release --quiet --offline
+	rm -rf log/*
