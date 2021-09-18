@@ -2,71 +2,104 @@
 USE DATABASE indus_identity;
 
 DROP TABLE IF EXISTS client_desc;
-DROP TABLE IF EXISTS client_secret;
 DROP TABLE IF EXISTS client_tokens;
 
+DROP TABLE IF EXISTS client_secret;
 CREATE TABLE IF NOT EXISTS client_secret (
-    sln             BIGINT UNSIGNED UNIQUE,
-        -- protocol
+    indus_client_id BINARY(32) NOT NULL,
     client_id       BINARY(16) NOT NULL,
+        -- unique for each instance of a client with the same 'indus_client_id'
+    UNIQUE (indus_client_id, client_id),
     client_secret   BINARY(32) UNIQUE,
-        -- optional, 256-bit secret exposed as a hex string
-        -- unique for multiple instances of a client using the same 'client_id'
-    expires_at      TIMESTAMP NOT NULL,
-        -- required, dynamic client registration. protocol.
-    issued_at       TIMESTAMP NOT NULL,
-        -- optional, dynamic client registration.
-    secret_type     TINYINT NOT NULL DEFAULT 0,
-        -- 1 = SYM, 2 = ASYM,
-    algorithm       VARCHAR(24) NOT NULL,
-    public_key      VARBINARY(512) DEFAULT NULL,
-    material        VARBINARY(32) DEFAULT NULL
+    UNIQUE (client_secret),
+    client_passwd   BINARY(32) UNIQUE,
+    UNIQUE (client_passwd),
+    client_secret_iat INTEGER NOT NULL DEFAULT 0,
+        -- RFC7591 - after a successful dynamic registration request.
+        -- Time at which the client identifier was issued.  The time is represented
+        --     as the number of seconds from 1970-01-01T00:00:00Z as measured in UTC
+        --     until the date/time of issuance.
+    client_secret_xat INTEGER NOT NULL DEFAULT 0,
+        -- RFC7591 - after a successful dynamic registration request.
+        -- REQUIRED if "client_secret" is issued.
+        -- Time at which the client secret will expire or 0 if it will not expire.
+        -- The time is represented as the number of seconds from 1970-01-01T00:00:00Z as
+        --     measured in UTC until the date/time of expiration.
+    client_passwd_iat INTEGER NOT NULL DEFAULT 0,
+    client_passwd_xat INTEGER NOT NULL DEFAULT 0
 );
 -- FOREIGN KEY (client_id) REFERNCES client_desc(client_id);
 
-CREATE TABLE IF NOT EXISTS client_tokens (
-    client_id      	      BINARY(12) NOT NULL UNIQUE,
-    reg_access_token      TEXT,
+CREATE TABLE IF NOT EXISTS client_reg_token (
+    indus_client_id      BINARY(32) NOT NULL,
+    client_id      	     BINARY(12) NOT NULL,
+    UNIQUE (indus_client_id, client_id),
+    initial_access_token TEXT,
+    init_access_tok_iat  TIMESTAMP NOT NULL,
+    init_access_tok_xat  TIMESTAMP NOT NULL,
+    reg_access_token     TEXT,
+    reg_access_tok_iat   TIMESTAMP NOT NULL,
+    reg_access_tok_xat   TIMESTAMP NOT NULL
         -- OAuth 2.0 bearer token.
         -- issued by AS thorugh the client registration endpoint.
         -- used to authenticate the caller while accessing client configuration endpoint.
-    initial_access_token  TEXT
 );
 
-CREATE TABLE IF NOT EXISTS client_redirect_uri(
-    client_desc_sln BIGINT UNSIGNED NOT NULL,
-    uri             VARCHAR(3000) NOT NULL,
+CREATE TABLE IF NOT EXISTS client_redirect_uri (
+    client_id BINARY(16) NOT NULL,
+    uri       VARCHAR(2048) CHARACTER SET ascii NOT NULL,
+    UNIQUE (client_id, uri)
+);
+
+CREATE TABLE IF NOT EXISTS client_event (
+    client_id BINARY(16) NOT NULL,
+    msg       TEXT NOT NULL,
+    evt       TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS client_desc (
-    sln BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    sln SERIAL PRIMARY KEY,
+    indus_client_id BINARY(32) NOT NULL,
+        -- unique id for cleints within this realm.
+        -- identify the non-varying component for dynamically registered client instances.
+        -- this is used in additional to 'software_id' when available.
     client_id BINARY(16) NOT NULL,
-    client_name VARCHAR(64) NOT NULL, -- human readable
-    client_type TINYINT NOT NULL DEFAULT 1,
-        -- 'confidential' = 1, 'public' = 3,
-    application_type TINYINT NOT NULL DEFAULT 1,
-        -- 'web' = 1, 'native' = 3
-    client_profile TINYINT NOT NULL DEFAULT 1,
-        -- 'server-webapp' = 1, 'SPA' = 3, 'user-agent' = 5,
-        -- 'mobile-native-app' = 7, 'machine-local-app' = 11
+    UNIQUE (indus_client_id, client_id),
     health TINYINT NOT NULL DEFAULT 0,
-        -- BAD=0, PENDING=1, APPROVED=3, ACTIVE=7,
-        -- DEACTIVATED=11, LOCKED=13, BLOCKED=17, DELETED=41
+        -- PENDING = 0, REGISTERED = 2, ACTIVE = 4,
+        -- COMPROMISED = 8, DEACTIVATED = 16, LOCKED = 32,
+        -- ZOMBIE = 128
+    client_profile TINYINT NOT NULL DEFAULT 1,
+        -- 'web-confidential' = 1,
+        -- 'web-public' = 5,
+        -- 'user-agent' = 11, 'SPA' = 19,
+        -- 'device-native' = 29,
+        -- 'localhost-confidential' = 37,
+        -- 'localhost-public' = 39,
     registration_type TINYINT NOT NULL DEFAULT 0,
         -- DYNAMIC = 1, FORM_POST = 5, ADMIN_CONSOLE = 11, CUSTOM = 23
         -- VALIDATED = 32,
         -- HAS_CLIENT_SECRET = 64
+
+    client_type TINYINT NOT NULL DEFAULT 1,
+        -- 'confidential' = 1, 'public' = 3,
+    client_name VARCHAR(64) NOT NULL,
+         -- RECOMMENDED. internationized. human readable - presented to the End-User.
+    application_type TINYINT NOT NULL DEFAULT 1,
+        -- 'web' = 1, 'native' = 3
+        -- oidc. optional, Indus:MANDATORY.
     software_id CHAR(36) CHARACTER SET ascii NOT NULL,
-        -- UUID string
+        -- oauth 2.0. UUID string
         -- need not be human readable; opaque to the client and authz server.
         -- unlike 'client_id' this value DOES NOT vary across instances.
-    software_version TEXT NOT NULL,
-
-    redirect_uris TEXT NOT NULL,
+    software_version VARCHAR(32) CHARACTER SET ascii NOT NULL,
+        -- oauth 2.0. string equality matching - no other comparison semantics.
+    redirect_uris TEXT CHARACTER SET ascii NOT NULL,
         -- required.
         -- table 'client_redirect_uri' stores the actual URL values.
-    grant_types SET('authorization_code', 'implicit', 'password', 'client_credentials',
-        'refresh_token',
+    grant_types SET(
+        'authorization_code', 'implicit', 'refresh_token', -- OAuth 2.0 and OIDC
+        'password', 'client_credentials',
         'urn:ietf:params:oauth:grant-type:jwt-bearer',
         'urn:ietf:params:oauth:grant-type:saml2-bearer')
         NOT NULL DEFAULT 'authorization_code',
@@ -76,59 +109,128 @@ CREATE TABLE IF NOT EXISTS client_desc (
         'code id_token', 'code token',
         'code id_token token', 'code token id_token') NOT NULL DEFAULT 'code',
         -- required.
-    logo_uri TEXT,
+    logo_uri TEXT CHARACTER SET ascii,
         -- optional.
         -- when present, MUST point to a valid image file.
         -- when present, server SHOULD display the image to the end-user during approval.
-    client_uri TEXT,
+    client_uri TEXT CHARACTER SET ascii,
         -- optional. home page of the client.
         -- when present, MUST point to a valid web page.
         -- server SHOULD present this to the user so the user can safely follow the link.
         -- RECOMMENDATION: use interstitial pages to reduce vulnerabilities.
-    policy_uri TEXT,
+    policy_uri TEXT CHARACTER SET ascii,
         -- optional. informs the end user how the profile data will be used.
         -- when present, MUST point to a valid web page.
         -- server SHOULD present this to the user.
-    tos_uri TEXT,
+    tos_uri TEXT CHARACTER SET ascii,
         -- optional. terms of service.
         -- when present, MUST point to a valid web page.
         -- server SHOULD present this to the user.
-    contacts TEXT NOT NULL,
+    contacts TEXT CHARACTER SET ascii NOT NULL,
         -- optional. array of email addresses of people responsible for the client.
-    scopes TEXT,
+        -- oidc states these are email addresses.
+        -- oauth 2.0 dynamic registration (RFC7591) is not specific about the values.
+    scope TEXT NOT NULL,
         -- space-separated list of scope values.
-        -- if omitted, the authz server MAY register a client with a default set of scopes/
-
-    needs_reg_config_access boolean DEFAULT FALSE,
-    -- auth_method='none' when confidential=false
-    -- 'client_secret_basic' is the default.
-    -- 'none', 'client_secret_post',
-    token_endpoint_auth_method VARCHAR(2048) NOT NULL DEFAULT 'client_secret_basic',
-    -- UPDATE indus_client SET token_endpoint_auth_signing_alg = 'RS256' WHERE token_endpoint_auth_method = 'private_key_jwt';
-    token_endpoint_auth_signing_alg VARCHAR(32) NOT NULL,
-    client_secret_expires_at INTEGER NOT NULL DEFAULT 0,
-    sector_identifier_uri  TEXT,
-    jwks JSON,
-        -- optional. client's JSON Web Key Set document.
-        -- MUST be a valid JSON Web Key Set document value..
+        -- if omitted, the authz server MAY register a client with a default set of scopes.
+        -- Indus has defaults: 'aadhaar', 'voterid', 'pan', 'indus_id', 'indus_key'
     jwks_uri VARCHAR(2048),
         -- optional. URL for the client's JSON Web Key Set. RFC7517.
         -- refers to a document containing client's public keys.
-    request_uris TEXT,
+        -- must follow requirements in RFC7591 and OIDC Dynamic Client Registration.
+    jwks JSON,
+        -- optional. client's JSON Web Key Set document.
+        -- MUST be a valid JSON Web Key Set document value.
+        -- must follow requirements in RFC7591 and OIDC Dynamic Client Registration.
+    sector_identifier_uri  TEXT,
+        -- OIDC Dynamic Client Registration.
+        -- The URL references a file with a single JSON array of redirect_uri values.
+        -- used in calculating pairwise identifiers.
+    subject_type CHAR(8) CHARACTER SET ascii NOT NULL DEFAULT 'public',
+        -- 'pairwise' OR 'public',
+    id_token_signed_response_alg VARCHAR(22) CHARACTER SET ascii DEFAULT 'RS256',
+        -- JWS alg algorithm [JWA] REQUIRED for signing the ID Token issued to this Client.
+        -- The public key for validating the signature is provided by retrieving the
+        --     JWK Set referenced by the jwks_uri element from OpenID Connect Discovery 1.0.
+        -- 'none' JWS alg algorithm value.
+    id_token_encrypted_response_alg VARCHAR(22) CHARACTER SET ascii DEFAULT '',
+    id_token_encrypted_response_enc VARCHAR(22) CHARACTER SET ascii DEFAULT '',
+        -- When id_token_encrypted_response_enc is included,
+        --    id_token_encrypted_response_alg MUST also be provided.
+        -- If id_token_encrypted_response_alg is specified, the default for this
+        --    value is 'A128CBC-HS256'.
+    userinfo_signed_response_alg VARCHAR(22) CHARACTER SET ascii DEFAULT '',
+        -- The default, if omitted, is for the UserInfo Response to return the
+        --    Claims as a UTF-8 encoded JSON object using the application/json content-type.
+    userinfo_encrypted_response_alg VARCHAR(22) CHARACTER SET ascii DEFAULT '',
+    userinfo_encrypted_response_enc VARCHAR(22) CHARACTER SET ascii DEFAULT '',
+        -- If userinfo_encrypted_response_alg is specified, the default for this
+        --    value is 'A128CBC-HS256'.
+        -- When userinfo_encrypted_response_enc is included,
+        --    userinfo_encrypted_response_alg MUST also be provided.
+    request_object_signing_alg VARCHAR(22) CHARACTER SET ascii DEFAULT 'none',
+        -- JWS alg algorithm [JWA] that MUST be used for signing Request Objects
+        --    sent to the OP. All Request Objects from this Client MUST be rejected,
+        --    if not signed with this algorithm.
+        -- Servers SHOULD support RS256. The value 'none' MAY be used. The default,
+        --    if omitted, is that any algorithm supported by the OP and the RP MAY be used.
+    request_object_encryption_alg VARCHAR(22) CHARACTER SET ascii DEFAULT '',
+    request_object_encryption_enc VARCHAR(22) CHARACTER SET ascii DEFAULT '',
+        -- If request_object_encryption_alg is specified, the default for this
+        --     value is 'A128CBC-HS256'.
+    needs_reg_config_access boolean DEFAULT FALSE,
+        -- auth_method='none' when confidential=false
+        -- 'client_secret_basic' is the default.
+        -- 'none', 'client_secret_post',
+    token_endpoint_auth_method VARCHAR(2048) NOT NULL DEFAULT 'client_secret_basic',
+        -- 'client_secret_post', 'client_secret_basic',
+        -- 'client_secret_jwt', 'private_key_jwt', and 'none'
+    token_endpoint_auth_signing_alg VARCHAR(32) NOT NULL,
+        -- JWS alg algorithm that MUST be used for signing the JWT used to authenticate
+        --     the Client at the Token Endpoint for the 'private_key_jwt' and
+        --     'client_secret_jwt' authentication methods.
+        -- All Token Requests using these authentication methods from this
+        --     Client MUST be rejected, if the JWT is not signed with this algorithm.
+        -- Servers SHOULD support RS256. Indus supports RS256.
+    default_max_age INTEGER DEFAULT 0, -- indicates there's no preference.
+        -- If omitted, no default Maximum Authentication Age is specified.
+        -- End-User MUST be actively authenticated if the End-User was authenticated
+        --     longer ago than the specified number of seconds.
+    require_auth_time TINYINT DEFAULT 0, -- indicates there's no preference.
+        -- It is REQUIRED when the value is true. If this is false, the auth_time
+        --    Claim can still be dynamically requested as an individual Claim for
+        --    the ID Token using the claims request parameter described in
+        --    Section 5.5.1 of Open
+    default_acr_values TEXT CHARACTER SET ascii,
+        -- The acr_values_supported discovery element contains a list of the
+        --     supported acr values supported by this server. Values specified in
+        --     the acr_values request parameter or an individual acr Claim request
+        --      override these default values.
+    initiate_login_uri VARCHAR(2048) CHARACTER SET ascii DEFAULT '',
+        -- URI using the 'https' scheme that a third party can use to initiate
+        --     a login by the RP, as specified in Section 4 of OpenID Connect Core 1.0.
+    request_uris TEXT CHARACTER SET ascii,
+        -- Array of request_uri values that are pre-registered by the RP for use at the OP.
+        -- OPs can require that request_uri values used be pre-registered with the
+        --     'require_request_uri_registration' discovery parameter.
+
     audience TEXT,
-    subject_type VARCHAR(15),
+
     allowed_cors_origins TEXT,
-    request_object_signing_alg VARCHAR(10) NOT NULL,
-    userinfo_signed_response_alg VARCHAR(10) NOT NULL,
     frontchannel_logout_uri TEXT NULL,
     frontchannel_logout_session_required BOOL NOT NULL DEFAULT FALSE,
     post_logout_redirect_uris TEXT NULL,
     backchannel_logout_uri TEXT NULL,
     backchannel_logout_session_required BOOL NOT NULL DEFAULT FALSE,
 
-    misc         TEXT,
-    created_at   TIMESTAMP NOT NULL,
-    updated_at   TIMESTAMP
+    dct TIMESTAMP NOT NULL,
+        -- client desc creation timestamp.
+    rgt TIMESTAMP,
+        -- client registration timestamp.
+    hct TIMESTAMP,
+        -- last health checked/updated timestamp.
+    lmt TIMESTAMP
+        -- last modification timestamp.
 );
 
 CREATE UNIQUE INDEX index_client_desc_client_id ON client_desc(client_id);
