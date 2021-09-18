@@ -101,9 +101,11 @@ CREATE TABLE IF NOT EXISTS client_desc (
         'authorization_code', 'implicit', 'refresh_token', -- OAuth 2.0 and OIDC
         'password', 'client_credentials',
         'urn:ietf:params:oauth:grant-type:jwt-bearer',
-        'urn:ietf:params:oauth:grant-type:saml2-bearer')
+        'urn:ietf:params:oauth:grant-type:saml2-bearer',
+        'urn:openid:params:grant-type:ciba')
         NOT NULL DEFAULT 'authorization_code',
         -- required. ref: RFC 7591 - OAuth 2.0 Dynamic Registration.
+        -- https://openid.net/specs/openid-client-initiated-backchannel-authentication-core-1_0.html
     response_types SET('code', 'token',
         'id_token', 'id_token token',
         'code id_token', 'code token',
@@ -213,6 +215,27 @@ CREATE TABLE IF NOT EXISTS client_desc (
         -- Array of request_uri values that are pre-registered by the RP for use at the OP.
         -- OPs can require that request_uri values used be pre-registered with the
         --     'require_request_uri_registration' discovery parameter.
+
+    backchannel_token_delivery_mode CHAR(4) CHARACTER SET ascii DEFAULT '',
+        -- REQUIRED. One of the following values: poll, ping, or push.
+        -- When using the ping or poll mode, the Client MUST include the CIBA grant type
+        --     in the "grant_types" field.
+        -- When using the ping or push mode, the Client MUST register a
+        --     client notification endpoint.
+        -- Clients intending to send signed authentication requests MUST register
+        --     the signature algorithm that will be used.
+    backchannel_client_notification_endpoint VARCHAR(2048) CHARACTER SET ascii,
+        -- REQUIRED if the token delivery mode is set to ping or push.
+        -- MUST be an HTTPS URL.
+        -- This is the endpoint to which the OP will post a notification after a
+        --     successful or failed end-user authentication. It .
+    backchannel_authentication_request_signing_alg VARCHAR(22) CHARACTER SET ascii DEFAULT '',
+        -- JWS alg value that the Client will use for signing authentication requests.
+        -- When omitted, the Client will not send signed authentication requests.
+    backchannel_user_code_parameter BOOLEAN DEFAULT FALSE,
+        -- OPTIONAL. specifies whether the Client supports the user_code parameter.
+        -- If omitted, the default value is false.
+        -- matces with 'backchannel_user_code_parameter_supported' OP parameter.
 
     audience TEXT,
 

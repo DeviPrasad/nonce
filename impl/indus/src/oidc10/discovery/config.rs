@@ -57,6 +57,12 @@ pub enum ProviderConfigError {
 
     BadRequestParameter, BadRequestUriParameter, BadRequireRequestUriRegistration,
 
+    EmptyBackchannelAuthRequestSigningAlgValue, BadBackchannelAuthRequestSigningAlgValue,
+    BadBackchannelAuthRequestSigningAlgNone,
+    EmptyBackchannelTokenDeliveryModeValue,
+    BadBackchannelTokenDeliveryModeValue,
+    BadUserCodeParameterValue,
+
     BadSource(serde_json::Error),
     Custom(String),
 }
@@ -89,7 +95,7 @@ const INDUS_RESPONSE_TYPES: [&str; 8] = [
 const INDUS_RESPONSE_MODES: [&str; 2] = ["fragment", "query"];
 
 //OAuth 2.0 Dynamic Registration - https://www.rfc-editor.org/rfc/rfc7591.html - grant_types.
-const INDUS_GRANT_TYPES: [&str; 9] = [
+const INDUS_GRANT_TYPES: [&str; 10] = [
     "authorization_code", "client_credentials", "implicit", "password", "refresh_token",
     //JWT Bearer Token Grant Type Profile for OAuth 2.0
     "urn:ietf:params:oauth:grant-type:jwt-bearer",
@@ -99,6 +105,8 @@ const INDUS_GRANT_TYPES: [&str; 9] = [
     "urn:ietf:params:oauth:grant-type:device_code",
     //Token exchange grant type for OAuth 2.0 - RFC 8693 OAuth 2.0 Token Exchange
     "urn:ietf:params:oauth:grant-type:token-exchange",
+    //https://openid.net/specs/openid-client-initiated-backchannel-authentication-core-1_0.html
+    "urn:openid:params:grant-type:ciba"
 ];
 
 // https://openid.net/specs/openid-connect-core-1_0.html
@@ -184,6 +192,10 @@ const INDUS_CLAIM_NAMES:[&str; 25] = [
     "aadhaar", "voterid", "pan", "indus_id", "indus_key"
 ];
 
+// https://openid.net/specs/openid-client-initiated-backchannel-authentication-core-1_0.html
+// 4. Registration and Discovery Metadata
+const INDUS_BACKCHANNEL_TOKEN_DELIVERY_MODES:[&str; 3] = ["poll", "ping", "push"];
+
 #[derive(serde::Serialize, serde::Deserialize, std::fmt::Debug)]
 pub struct ProviderConfig {
     issuer: Url,
@@ -221,6 +233,10 @@ pub struct ProviderConfig {
     require_request_uri_registration: bool,
     op_policy_uri: Url,
     op_tos_uri: Url,
+    backchannel_token_delivery_modes_supported: Vec<String>,
+    backchannel_authentication_endpoint: Url,
+    backchannel_authentication_request_signing_alg_values_supported: Option<Vec<String>>,
+    backchannel_user_code_parameter_supported: Option<bool>,
 }
 
 // alias type
@@ -328,6 +344,13 @@ impl ProviderConfig {
         self.display_values_supported.dedup();
         self.claims_supported.sort();
         self.claims_supported.dedup();
+        if self.backchannel_authentication_request_signing_alg_values_supported.is_some() {
+            let algref = self.backchannel_authentication_request_signing_alg_values_supported.as_mut().unwrap();
+            algref.sort();
+            algref.dedup();
+        }
+        self.backchannel_token_delivery_modes_supported.sort();
+        self.backchannel_token_delivery_modes_supported.dedup();
     }
     // https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata
     // 3.  OpenID Provider Metadata
@@ -362,6 +385,10 @@ impl ProviderConfig {
         self.have_request_param_uri_registration_values()?;
         self.https_port_query_url(&self.op_policy_uri)?;
         self.https_port_query_url(&self.op_tos_uri)?;
+        self.https_port_url(&self.backchannel_authentication_endpoint)?;
+        self.have_backchannel_authentication_request_signing_alg_values()?;
+        self.have_user_code_parameter_support()?;
+        self.have_backchannel_token_delivery_modes_supported()?;
         Ok(self)
     }
     // https scheme. no port. no user name. no password. no query. no fragment.
@@ -624,6 +651,39 @@ impl ProviderConfig {
         }
         if !self.require_request_uri_registration {
             Err(ProviderConfigError::BadRequireRequestUriRegistration)?
+        }
+        Ok(self)
+    }
+    pub fn have_backchannel_authentication_request_signing_alg_values(&self) -> ConfigResult<&ProviderConfig> {
+        if self.backchannel_authentication_request_signing_alg_values_supported.is_some() {
+            let algref = self.backchannel_authentication_request_signing_alg_values_supported.as_ref().unwrap();
+            if algref.len() == 0 {
+                Err(ProviderConfigError::EmptyBackchannelAuthRequestSigningAlgValue)?
+            }
+            if !algref.iter().all(|sa| INDUS_SIGNING_ALGORITHMS.contains(&sa.as_str())) {
+                Err(ProviderConfigError::BadBackchannelAuthRequestSigningAlgValue)?
+            }
+            // "none" MUST NOT be used.
+            if algref.iter().any(|sa| sa.eq("none") ) {
+                Err(ProviderConfigError::BadBackchannelAuthRequestSigningAlgNone)?
+            }
+        }
+        Ok(self)
+    }
+    pub fn have_user_code_parameter_support(&self) -> ConfigResult<&ProviderConfig> {
+        if self.backchannel_user_code_parameter_supported.is_some() {
+            if !self.backchannel_user_code_parameter_supported.unwrap() {
+                Err(ProviderConfigError::BadUserCodeParameterValue)?
+            }
+        }
+        Ok(self)
+    }
+    pub fn have_backchannel_token_delivery_modes_supported(&self) -> ConfigResult<&ProviderConfig> {
+        if self.backchannel_token_delivery_modes_supported.len() == 0 {
+            Err(ProviderConfigError::EmptyBackchannelTokenDeliveryModeValue)?
+        } else if !self.backchannel_token_delivery_modes_supported.iter()
+                           .all(|m| INDUS_BACKCHANNEL_TOKEN_DELIVERY_MODES.contains(&m.as_str())) {
+            Err(ProviderConfigError::BadBackchannelTokenDeliveryModeValue)?
         }
         Ok(self)
     }

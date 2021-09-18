@@ -32,7 +32,11 @@ pub fn config_full_json_str() {
         "require_request_uri_registration": true,
         "service_documentation": "https://www.indus.in/nonce/oidc/service-doc",
         "op_policy_uri": "https://www.indus.in/nonce/oidc/provider-policy",
-        "op_tos_uri": "https://www.indus.in/nonce/oidc/provider-terms-of-service"
+        "op_tos_uri": "https://www.indus.in/nonce/oidc/provider-terms-of-service",
+        "backchannel_authentication_endpoint": "https://www.indus.in/nonce/backchannel/auth",
+        "backchannel_user_code_parameter_supported": true,
+        "backchannel_authentication_request_signing_alg_values_supported": ["HS256"],
+        "backchannel_token_delivery_modes_supported": ["ping", "poll", "push", "poll"]
         }"#;
     let res = super::config::ProviderConfig::from_json(_full);
     if let Ok(config) = res {
