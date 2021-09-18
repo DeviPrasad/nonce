@@ -176,7 +176,7 @@ const INDUS_CLAIM_TYPES: [&str; 3] = [ "normal", "aggregated", "distributed" ];
 
 // https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
 // OpenID Connect Core 1.0.
-// 5. Cliams - 5.1 Standard Claims.
+// 5. Claims - 5.1 Standard Claims.
 const INDUS_CLAIM_NAMES:[&str; 25] = [
     "sub", "name", "given_name", "family_name", "middle_name", "nickname", "preferred_username",
     "profile", "picture", "website", "email", "email_verified", "gender", "birthdate",
