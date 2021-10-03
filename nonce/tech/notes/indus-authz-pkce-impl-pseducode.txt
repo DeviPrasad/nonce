@@ -1,0 +1,159 @@
+
+Authorization Endpoint
+
+Implementation
+    Runs as an OS process.
+    Runs in an apartment with the following QoS
+        profile SECURE.
+        mode  STRICT.
+            all RECOMMENDED options are treated MUST.
+            all SHOULD options are treated MUST.
+    Opens ONY TLS connections for communication.
+        databases as well as other Indus endpoints.
+
+Base URL
+    https://www.indus.authz/ouath20/
+
+Authorization endpoint has no query components.
+    route for the first half/part of the end user authorozation phase
+        authz: '/authorize'
+    route for the second half/part of the end user authorozation phase
+        authz-callback: '/authorization/code/callback/<toffe_suffix_16_hexchars>/'
+    Notes
+        dynamically mounting new routes for authz-callback.
+        dynamic routes may be garbage collected every X seconds or so.
+
+
+OAuth 2.0 Code Flow - End-User Authorozation - First Part.
+-----------------------------------------------------------
+Receive the TLS GET request req on the /authorize (aka authz) route.
+
+Initialize
+    self.use_pkce = false
+    resp.has_errors = false
+
+Extract the optional query component, and request parameters. Fragment is NOT allowed.
+We allow 'resource' parameter per RFC8707 - Resource Indocators for OAuth 2.0.
+    fragment = url.take_fragment()
+    query = url.take_query()
+    resp_type_code = req.expect("response_type", "code")
+    client_id = req.take_str("client_id", MIN_24_HEXCHAR_STR, MAX_32_HEXCHAR_STR)
+    redirect_uri = req.take_uri_with_query('redirect_uri', MAX_URLENCODED_URL)
+    scope = req.take_str("scope")
+    resource = req.take_str("resource")
+    state = req.take_bytes("state", MAX_STATE_BYTES)
+    code_challenge = req.take_bytes("code_challenge", MAX_96_BYTES)
+    code_challenge_method = req.take_str("code_challenge_method")
+
+Validate parameters (section 4.1.2.1 RFC7649)
+    Note
+        set_error_redirect_param("...")
+            appends the parameter "error" to the query component of the redirection uri.
+        set_error_redirect_param("errval") sets the "error" parameter to "errval".
+        set_error_*** set resp.has_errors to true.
+        'redirect' function
+            takes the user agent back to the client with errors.
+            copies the 'state' parameter value if present in the client authz request.
+
+    if redirect_uri is Error::BadLength
+        return 404
+
+    if client_id is None
+        return 404
+
+    client = oauth20::authz_server::client_from(client_id)
+    if client is None
+        return 404
+
+    validate the redirect uri present in the request.
+    if redirect_uri is Some(url)
+        if  NOT client.redirect_uris().any(redirect_uri)
+            //redirect resp.set_error_redirect_param("invalid_request")
+            return 404
+    else // redirect_uri is None, however there's a registered client_id
+        redirect_uri = client.get_redirect_url()
+
+    // we have a registered client_id and we have a redirect_uri.
+    // check the other required parameter
+    if resp_type_code is None OR fragment is Some(str)
+        redirect resp.set_error_redirect_param("invalid_request")
+    if resp_type_code = false
+        redirect resp.set_error_redirect_param("unsupported_response_type")
+
+    // allow only "indus_id" scope in authz code flow and PKCE
+    if scope is Some(scope_name) AND scope_name != oauth20::scope::indus_id
+        redirect resp.set_error_redirect_param("invalid_scope")
+
+    if state is Error::BadLength
+        redirect resp.set_error_redirect_param("invalid_request")
+
+    if resource is Some(resource_name)
+        if ResourceServer::from(resource_name) is None
+            redirect resp.set_error_redirect_param("invalid_target")
+
+    if code_challenge is None AND code_challenge_method is Some(str)
+        redirect resp.set_error_redirect_param("invalid_request")
+
+    if code_challenge is Some(base64_str) {
+        if code_challenge_method is None
+            code_challenge_method = "S256"
+
+        if code_challenge_method != "S256"
+            redirect resp.set_error_redirect_param("invalid_request")
+        else
+            self.use_pkce = true
+    }
+
+obtain authorization from the end user.
+    if (self.use_pkce)
+        toffy = indus::core::crypto::pkce_toffy(client_id, state, redirect_uri, query, resource, code_challenge, code_challenge_method)
+    else
+        toffy = indus::core::crypto::vanilla_toffy(client_id, state, redirect_uri, query, resource, indus::core::crypto::nonce())
+
+    indus::data::volatile::store(toffy, client_id, state, redirect_uri, query, scope, code_challenge, code_challenge_method);
+
+    user_authz_callback_url = indus::basic::http::dynamic_callback_url(authz-callback, toffee)
+    self.mount_dyn_route(user_authz_callback_url)
+
+    ResourceServer rs =
+        resource is Some(resource_name) ? ResourceServer::from(resource_name) : ResourceServer::any()
+    authz_page = rs.build_authz_page()
+        .set_request(req)
+        .set_callback(user_authz_callback_url)
+        .set_http_cache_control() // Cache-Control: no-store, max-age=600, no-transform
+        .set_session_cookie("toffy", toffy)
+    rs.forward(authz_page)
+
+
+
+
+OAuth 2.0 Code Flow - End-User Authorozation - Second Part.
+------------------------------------------------------------
+Receive the TLS GET request 'req' on the dynamically mounted 'authz_callback' route.
+    (/authorization/code/callback/<toffe_suffix_16_hexchars>)
+
+Remove this dynamic route
+    indus::http::unmount_dyn_route(user_authz_callback_url)
+
+Extract toffy and find the original client request object
+    toffy = req.take_bytes("toffee", MAX_TOFFY_BYTES)
+    if toffy is None
+        return
+    client_req = indus::data::volatile::find(toffy)
+    if cleint_req is None
+        return
+    client = oauth20::authz_server::client_from(cleint_req.client_id)
+    redirect_uri = cleint_req.redirect_uri
+
+Check if end-user authorization and consent was successful.
+    authz_succeeded = req.take_bool("authorization_status")
+    if NOT authz_succeeded
+        redirect resp.set_error_redirect_param("acces_denied")
+Grant code
+    code = self.create_code(client_req)
+    granted_scope = oauth20::scope::indus_id
+    indus::data::volatile::update(client_id, code, granted_scope);
+    resp.set("code", code);
+    if client_req.state is Some(byte_str)
+        resp.set("state", byte_str)
+    redirect resp

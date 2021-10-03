@@ -6,37 +6,42 @@ DROP TABLE IF EXISTS oauth2_refresh;
 DROP TABLE IF EXISTS oauth2_code;
 
 CREATE TABLE IF NOT EXISTS oauth2_access (
-    txid          BINARY(20) NOT NULL,
+    sln           INT AUTO_INCREMENT PRIMARY KEY,
+    toffy         BINARY(32) NOT NULL,
     client_id     BINARY(16) NOT NULL,
-    redirect_uri  TEXT, -- optional
+    redirect_uri  VARCHAR(2048) CHARACTER SET ascii NOT NULL, -- optional
     scope         TEXT, -- optional
     state         VARBINARY(2048), -- recommended
+    resource      TEXT,
     granted_scope TEXT,
     form_data     TEXT,
     session_data  TEXT,
-    reqat         TIMESTAMP NOT NULL DEFAULT NOW()
+    clock         TIMESTAMP NOT NULL DEFAULT NOW()
 );
 CREATE UNIQUE INDEX index_oauth2_access_txid ON oauth2_access (txid);
 CREATE INDEX index_oauth2_access_client_id ON oauth2_access (client_id);
 
 CREATE TABLE IF NOT EXISTS oauth2_pkce (
-    txid           BINARY(20) NOT NULL,
+    sln            INT AUTO_INCREMENT PRIMARY KEY,
+    toffy          BINARY(32) NOT NULL,
     client_id      BINARY(16) NOT NULL,
-    redirect_uri   TEXT,
+    redirect_uri   VARCHAR(2048) CHARACTER SET ascii NOT NULL, -- optional
     scope          TEXT,
     state          VARBINARY(2048),
+    resource       TEXT,
     code_challenge VARBINARY(2048),
     code_challenge_method VARCHAR(16),
     granted_scope  TEXT,
     form_data      TEXT,
     session_data   TEXT,
-    reqat          TIMESTAMP NOT NULL DEFAULT NOW()
+    clock          TIMESTAMP NOT NULL DEFAULT NOW()
 );
 CREATE UNIQUE INDEX index_oauth2_pkce_txid ON oauth2_pkce (txid);
 CREATE INDEX index_oauth2_pkce_client_id ON oauth2_pkce (client_id);
 
 CREATE TABLE IF NOT EXISTS oauth2_refresh (
-    txid           BINARY(20) NOT NULL,
+    sln            INT AUTO_INCREMENT PRIMARY KEY,
+    toffy          BINARY(32) NOT NULL,
     client_id      BINARY(16) NOT NULL,
     scope          TEXT,
     code_challenge VARBINARY(2048),
@@ -50,7 +55,8 @@ CREATE UNIQUE INDEX index_oauth2_refresh_txid ON oauth2_refresh (txid);
 CREATE INDEX index_oauth2_refresh_client_id ON oauth2_refresh (client_id);
 
 CREATE TABLE IF NOT EXISTS oauth2_code (
-    txid           BINARY(20) NOT NULL,
+    sln            INT AUTO_INCREMENT PRIMARY KEY,
+    toffy          BINARY(32) NOT NULL,
     client_id      BINARY(16) NOT NULL,
     scope          TEXT,
     granted_scope  TEXT,

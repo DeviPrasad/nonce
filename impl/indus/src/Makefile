@@ -10,13 +10,13 @@ pleb:
 	RUSTFLAGS=${PLEB_RUST_FLAGS} cargo build
 
 pleb-run:
-	RUSTFLAGS=${PLEB_RUST_FLAGS} RUST_BACKTRACE=1 cargo run
+	RUSTFLAGS=${PLEB_RUST_FLAGS} RUST_BACKTRACE=1 RUST_LOG=info cargo run -- --show-output
 
 pleb-test:
-	RUSTFLAGS=${PLEB_RUST_FLAGS} RUST_BACKTRACE=1 cargo test -- --show-output
+	RUSTFLAGS=${PLEB_RUST_FLAGS} RUST_BACKTRACE=1 RUST_LOG=info cargo test -- --show-output
 
 test:
-	RUSTFLAGS=${PLEB_RUST_FLAGS} RUST_BACKTRACE=1 cargo test
+	RUSTFLAGS=${PLEB_RUST_FLAGS} RUST_BACKTRACE=1 RUST_LOG=info cargo test
 
 dev:
 	cargo build
