@@ -1,7 +1,7 @@
 mod basic;
 mod pleb;
 use pleb::logger;
-use basic::http::node::vertex;
+use basic::http::auth_endpoint::AuthEndpoint;
 
 #[tokio::main]
 async fn main() {
@@ -10,5 +10,5 @@ async fn main() {
         std::process::exit(1);
     }
     log::info!("Starting Indus");
-    vertex::run().await;
+    AuthEndpoint::start().await;
 }

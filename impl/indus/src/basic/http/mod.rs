@@ -1,1 +1,1 @@
-pub mod node;
+pub mod auth_endpoint;
