@@ -1,8 +1,9 @@
 use std::net::{ToSocketAddrs};
-use warp::{Filter, http::Method, http::HeaderMap};
+use warp::{http::StatusCode,  http::Uri, Filter, http::Method, http::HeaderMap, http::HeaderValue};
 use warp::filters::path::FullPath;
 use url::{Url};
 use std::net::SocketAddr;
+use warp::Reply;
 
 #[derive(std::fmt::Debug)]
 pub enum VertexError {
@@ -18,35 +19,37 @@ pub struct AuthEndpoint {
     host_port: String,
     sock: Option<SocketAddr>,
 }
-
-impl AuthEndpoint {
+  impl AuthEndpoint {
     pub fn new(running: bool, err: VertexError, host_port: String, sock: Option<SocketAddr>) -> AuthEndpoint {
         AuthEndpoint {running, err, host_port, sock}
     }
-    fn indus_top() -> String {
-        log::info!("indus_top()");
-        "Indus OAuth 2.0 and OIDC Identity Provider\n".to_string()
-    }
-    fn webfinger_request() -> String {
-        log::info!("webfinger()");
-        "TODO: webfinger for Indus OpenID Config Service\n".to_string()
-    }
-
-    fn authz_code_grant(mehod: Method, headers: HeaderMap, path: FullPath, qs: String) -> String {
+    fn authz_code_grant(mehod: Method, headers: HeaderMap, path: FullPath, qs: String) -> warp::reply::Response {
         log::info!("authz_code_grant()");
-        if !(mehod == Method::GET || mehod == Method::POST) {
-            return "Bad Request Method\n".to_string();
+        for (key, value) in headers.iter() {
+            println!("hk: {:?}: val: {:?}", key, value);
         }
-        let mut ps = String::from("https://indus.oauth.in:40401");
+        // example "http://loiter.xyz.in:45001"
+        let origin_header: &HeaderValue = headers.get("Origin").unwrap();
+        let origin = origin_header.to_str().unwrap();
+        let mut ps = String::from(origin);
         ps.push_str(path.as_str());
         ps.push_str("?");
         ps.push_str(&qs);
         let res = Url::parse(&ps);
         if res.is_ok() {
-            res.unwrap().query_pairs().for_each(|(i, x)| log::warn!("{} {}", i, x));
-            "TODO: HTTP GET/POST - Authorization Code Grant\n\n".to_string()
+            let cluri = res.unwrap();
+            let authority = origin.strip_prefix(&(String::from(cluri.scheme()) + "://"));
+            println!("{} -- {} -- {:?}", cluri, cluri.scheme(), authority);
+            //res.unwrap().query_pairs().for_each(|(i, x)| log::warn!("{} {}", i, x));
+            let uri = Uri::builder().scheme(cluri.scheme())
+                .authority(authority.unwrap()) //"loiter.xyz.in:45001")
+                .path_and_query(String::from("/pkce/code/redirect?") + &qs + "&code=eyTxz987NqwpfgjSvn")
+                .build();
+            log::info!("authz_code_grant() - sent redirect {:#?}", uri);
+            warp::redirect::temporary(uri.unwrap()).into_response()
         } else {
-            "Bad Request\n".to_string()
+            warp::reply::with_status(warp::reply::json(&""),
+                StatusCode::from_u16(400).unwrap()).into_response()
         }
     }
 
@@ -66,19 +69,25 @@ impl AuthEndpoint {
     }
 
     pub async fn run(&self) {
-        let indus_top = warp::path::end().map(|| AuthEndpoint::indus_top());
-        let webfinger = warp::path!(".well-known" / "webfinger").map(|| AuthEndpoint::webfinger_request());
+        let cors = warp::cors()
+            //.allow_origin("http://loiter.xyz.in:45001")
+            .allow_any_origin()
+            .allow_headers(vec!["content-type", "User-Agent", "Sec-Fetch-Mode", "Referer", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"])
+            .allow_methods(vec!["GET", "POST", "OPTIONS"]);
+        //let webfinger = warp::path!(".well-known" / "webfinger").map(|| AuthEndpoint::webfinger_request());
         let grant_code = warp::path("authorize")
             .and(warp::method())
             .and(warp::header::headers_cloned())
+            //.and(warp::filters::header::value("origin"))
             .and(warp::path::end())
             .and(warp::path::full())
             .and(warp::query::raw())
-            .map(|method: Method, headers: HeaderMap, path: warp::path::FullPath, qs: String| AuthEndpoint::authz_code_grant(method,headers, path, qs));
-        let routes = warp::any().and(
-            warp::get().and(indus_top)
-            .or(grant_code)
-            .or(warp::get().and(webfinger)));
+            .map(|method: Method, headers: HeaderMap, path: warp::path::FullPath, qs: String| AuthEndpoint::authz_code_grant(method, headers, path, qs))
+            .with(cors).with(warp::log("grant_code - cors request"));
+        let routes = warp::any().and(grant_code);
+                //.and(warp::get().and(indus_top)
+                //.or(grant_code)
+                //.or(warp::get().and(webfinger)));
         warp::serve(routes).run(self.sock.unwrap()).await;
     }
 

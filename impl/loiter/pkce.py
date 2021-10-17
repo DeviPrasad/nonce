@@ -1,3 +1,4 @@
+#!/usr/local/bin/python3
 import string
 import base64
 import hashlib
@@ -7,7 +8,6 @@ import requests
 import time
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
-
 
 class Pkce:
     urlsafe_alphabet = string.digits + string.ascii_letters + "-._~"
@@ -20,9 +20,11 @@ class Pkce:
         self.hash_bytes = None
     # random URL-safe text string, Base64 encoded.
     # On average, each byte results in approximately 1.3 characters.
+    @staticmethod
     def urlsafe_random_token_str(nb):
         return secrets.token_urlsafe(nb)
 
+    @staticmethod
     def urlsafe_random_str(nc):
         return ''.join(secrets.choice(Pkce.urlsafe_alphabet) for i in range(nc))
 
