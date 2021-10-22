@@ -37,13 +37,13 @@ impl AuthEndpoint {
     }
     fn pleb_consent() -> warp::reply::Response {
         let uri = Uri::from_static("basic.html");
-        log::info!("ask_consent - sending redirect {:#?}", uri);
+        log::info!("pleb_consent - sending redirect {:#?}", uri);
         warp::redirect::temporary(uri).into_response()
     }
 
     fn rs_custom_consent() -> warp::reply::Response {
-        let uri = Uri::from_static("basic.html");
-        log::info!("ask_consent - sending redirect {:#?}", uri);
+        let uri = Uri::from_static("action/");
+        log::info!("rs_custom_consent - sending redirect {:#?}", uri);
         warp::redirect::temporary(uri).into_response()
     }
 
@@ -98,6 +98,7 @@ impl AuthEndpoint {
         let cors = warp::cors()
             //.allow_origin("http://loiter.xyz.in:45001")
             .allow_any_origin()
+
             .allow_headers(vec!["content-type", "User-Agent", "Sec-Fetch-Mode", "Referer", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"])
             .allow_methods(vec!["GET", "POST", "OPTIONS"]);
         //let webf = warp::path!(".well-known" / "webfinger").map(|| AuthEndpoint::webfinger_request());
@@ -106,7 +107,7 @@ impl AuthEndpoint {
             .and(warp::path::end())
             .map(|| log::info!("CONSENT_ASK")).untuple_one()
             //.and(warp::fs::dir("static"))
-            .map(|| AuthEndpoint::ask_consent())
+            .map(|| AuthEndpoint::pleb_consent())
             //.map(|| {̋ warp::redirect::redirect(Uri::from_static("basic.html")) })
             .with(cors.clone()); //.with(warp::log("consent_ask - cors request"));
         let grant_code = warp::get()
