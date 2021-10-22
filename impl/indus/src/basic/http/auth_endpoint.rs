@@ -4,8 +4,6 @@ use warp::filters::path::FullPath;
 use url::{Url};
 use std::net::SocketAddr;
 use warp::Reply;
-use warp::reject::{Rejection};
-
 
 #[derive(std::fmt::Debug)]
 pub enum VertexError {
@@ -47,7 +45,7 @@ impl AuthEndpoint {
         warp::redirect::temporary(uri).into_response()
     }
 
-    fn authz_code_grant(mehod: Method, headers: HeaderMap, path: FullPath, qs: String) -> warp::reply::Response {
+    fn authz_code_grant(_mehod: Method, headers: HeaderMap, path: FullPath, qs: String) -> warp::reply::Response {
         log::info!("authz_code_grant()");
         for (key, value) in headers.iter() {
             println!("hk: {:?}: val: {:?}", key, value);
@@ -65,11 +63,11 @@ impl AuthEndpoint {
             let authority = origin.strip_prefix(&(String::from(cluri.scheme()) + "://"));
             println!("{} -- {} -- {:?}", cluri, cluri.scheme(), authority);
             //res.unwrap().query_pairs().for_each(|(i, x)| log::warn!("{} {}", i, x));
-            let uriX = Uri::builder().scheme(cluri.scheme())
+            let _uri = Uri::builder().scheme(cluri.scheme())
             .authority(authority.unwrap()) //"loiter.xyz.in:45001")
             .path_and_query(String::from("/pkce/code/redirect?") + &qs + "&code=eyTxz987NqwpfgjSvn")
             .build();
-            log::info!("authz_code_grant() - sent redirect {:#?}", uriX);
+            log::info!("authz_code_grant() - sent redirect {:#?}", _uri);
             //warp::redirect::temporary(uriX.unwrap()).into_response()
             let uri = Uri::from_static("consent");
             warp::redirect::temporary(uri).into_response()
