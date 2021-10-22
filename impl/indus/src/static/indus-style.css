@@ -1,0 +1,123 @@
+html, img {
+    margin: 0;
+    padding: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    vertical-align: baseline;
+    background: opaque;
+    background-color: white;
+    font-size: 14px;
+    user-select: none;
+}
+body {
+    line-height: 1.3;
+    font-family: Open Sans, Helvetica Neue, Arial, sans-serif;
+    font-size: 14px;
+    color: #111;
+    height: 100%;
+    background-color: white;
+    user-select: text;
+}
+.component_root {
+    margin-top: 1%;
+    margin-left: 10%;
+    margin-right: 10%;
+    width: 80%;
+    background-color: white;
+}
+body.busy_cursor {
+    cursor: progress !important;
+}
+.loaderspinner, .spinner {
+    border: 16px solid #F3F3F3; /* Light grey */
+    border-top: 16px solid #23A0F5; /* Blue */
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    animation: spin 2s linear infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.header {
+    display: block;
+    margin-left: 10%;
+    margin-right: 10%;
+    color: #FFFFFF;
+    font-size: medium;
+    padding: 16px;
+    background-color: rgba(40, 40, 40, 0.8);
+}
+input[type=text],
+input[type=number] {
+    color: black;
+    border: 1px solid #bbb;
+    outline: none;
+    height: 1.7em;
+    margin: 0;
+    padding: 1px 0 1px 2px;
+}
+.input[type=text]:active,
+.input[type=text]:focus,
+.input[type=number]:active,
+.input[type=number]:focus {
+    appearance: none;
+    color: black;
+    border: 1px solid #DDD;
+    outline: none;
+    height: 1.7em;
+    margin: 0;
+    padding: 1px 0 1px 2px;
+}
+.user_consent_form_holder {
+    margin: 15% auto;
+    text-align: left;
+    font-size: x-large;
+}
+.user_consent_content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #DEE;
+    padding: 1em;
+    font-weight: normal;
+}
+
+.div_indus_id_input {
+    margin-left: 1.2em;
+    height: 2.2em;
+}
+.indus_id_input {
+    width: 15em;
+    text-align: center;
+    font-size: large;
+    color:rgba(30, 30, 30, 0.75) !important;
+}
+.user_consent_button_holder {
+    margin-left: 1.2em;
+    font-size: medium;
+    height: 2em !important;
+    width: 10% !important;
+}
+.user_consent_button {
+    height: 100%;
+    width: 100%;
+    padding: 1px 0 1px 2px;
+    border-radius: 12px;
+}
+
+:root {
+    --blue: #1E90FF;
+    --white: #FFFFFF;
+    --SandyBrown: #F4A460;
+    --LemonChiffon: #FFFACD;
+    --DarkOliveGreen: #556B2F;
+    --MediumSlateBlue: #7B68EE;
+    --LightLemon: #B2F5AD;
+    --RoyalBlue: #7FB4F9;
+    --UpgradeNextBkColor: rgba(100, 200, 40, 0.5);
+    --UpgradePreviousBkColor: #DD8080;
+  }

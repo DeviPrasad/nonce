@@ -69,12 +69,25 @@
             console.log(xhr);
         }
         let onload = () => {
-            console.log("sucess wrapper...");
-            if (!(xhr.readyState == 4 && (xhr.status == 200 || xhr.status == 302))) {
+            console.log("xhr response: ", xhr);
+            if (!(xhr.readyState == 4 && xhr.status < 400)) {
                 receiver.error();
+                xhr.abort();
+                return;
+            }
+            if (xhr.status == 200) {
+                if (!(xhr.responseType && xhr.responseType.toLowerCase() === "json") && xhr.responseURL) {
+                    const goto = xhr.responseURL + "?session_state=ASD123";
+                    window.alert("redirecting to " + goto);
+                    this.window.location.replace(goto);
+                } else if (xhr.responseType && xhr.responseType.toLowerCase() === "json"){
+                    receiver.success.bind(receiver);
+                    receiver.success();
+                } else {
+                    console.error("Bad Content Type. Response rejected.");
+                }
             } else {
-                receiver.success.bind(receiver); //.sucess();
-                receiver.success();
+                console.warn("Bad Request or unhandled status code: ", xhr);
             }
         }
         xhr.onload = onload;

@@ -14,8 +14,8 @@ class PkceCodeGrantRedirect(tornado.web.RequestHandler):
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
         self.set_header("Vary", "Origin")
-        self.set_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.set_header("Access-Control-Allow-Headers", "x-requested-with,access-control-allow-origin,authorization,content-type")
+        self.set_header('Access-Control-Allow-Methods', "GET, POST, OPTIONS")
+        self.set_header("Access-Control-Allow-Headers", "x-requested-with,access-control-allow-origin, authorization,content-type")
         print("\n\n")
         print("PkceCodeGrantRedirect::set_default_headers", self.request)
     def options(self):
@@ -55,7 +55,7 @@ class LoiterWebLobbyList(LoiterRequestHandler):
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
         self.set_header("Vary", "Origin")
-        self.set_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.set_header('Access-Control-Allow-Methods', "GET, POST, OPTIONS")
         self.set_header("Access-Control-Allow-Headers", "x-requested-with,access-control-allow-origin,authorization,content-type")
         print("LoiterWebLobbyList::set_default_headers")
     def get(self):
@@ -78,7 +78,7 @@ class LoiterWebLobbyReader(LoiterRequestHandler):
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
         self.set_header("Vary", "Origin")
-        self.set_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.set_header('Access-Control-Allow-Methods', "GET, POST, OPTIONS")
         self.set_header("Access-Control-Allow-Headers", "x-requested-with,access-control-allow-origin,authorization,content-type")
         print("LoiterWebLobbyRead::set_default_headers")
     def options(self):
