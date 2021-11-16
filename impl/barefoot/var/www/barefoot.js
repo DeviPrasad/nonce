@@ -1,39 +1,24 @@
+"use strict";
+
 (function() {
     let doc = document;
-    loiter_signin_with_indus_id = () => {
-        console.log("loiter_signin_with_indus_id");
-        let session = {
-            success: function() {
-                console.log("loiter_signin_with_indus_id : ", this.xhr);
-                try {
-                    let res = JSON.parse(this.xhr.response);
-                    console.log("loiter_signin_with_indus_id - after redirect: ",res);
-                } catch (ex) { console.error(ex); }
-            }
-        };
-        makeAsyncHttpGetRequest("lobby", session);
-    }
     doc.addEventListener('DOMContentLoaded', (event) => {
         console.log("DOMContentLoaded");
-        idSigninUser = doc.getElementById("loiter_signin_with_indus_id");
-        if (idSigninUser) {
-            idSigninUser.addEventListener('click', loiter_signin_with_indus_id);
-        }
     });
-    function originLoiterWebClient() {
+    function barefootOrigin() {
         return window.location.origin
     }
-    function getSessionUserId () {
+    function getSessionSole () {
         let loiter_uid = null;
-        const strUser = sessionStorage.getItem("loiter_user");
+        const strUser = sessionStorage.getItem("barefoot-sole");
         if (strUser) {
-            let user = JSON.parse(strUser);
-            if (user) {
-                console.log("getLoggedInUserId", user);
-                loiter_uid = user.loiter_uid;
+            let sole = JSON.parse(strUser);
+            if (sole) {
+                console.log("getSessionSole", sole);
+                sole_did = sole.did;
             }
         }
-        return loiter_uid;
+        return sole_did;
     }
 
     function asyncFetch(receiver, pathServlet)
