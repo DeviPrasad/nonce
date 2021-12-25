@@ -1,18 +1,19 @@
+#![crate_name = "barebone"]
+#[doc(inline)]
 use std::convert::Infallible;
 use std::net::{ToSocketAddrs};
-use url::{Url};
 use std::net::SocketAddr;
 mod pleb;
 use pleb::logger;
-//use bytes::Bytes;
-use std::collections::HashMap;
-use url::form_urlencoded::parse;
+use http::StatusCode;
+use bytes::Bytes;
+//use url::{Url};
+//use url::form_urlencoded;
+use http_body::{Body as HttpBody};
 
 use hyper::{
-    Uri,
-//    body::to_bytes,
     service::{make_service_fn, service_fn},
-    Body, Request, Response, Server, Method,
+    Body, Request, Response, Server,
     HeaderMap,
 };
 use hyper::server::conn::AddrStream;
@@ -29,12 +30,258 @@ pub struct AuthEndpoint {
     err: VertexError,
     host_port: String,
     sock: Option<SocketAddr>,
-    scheme: String,
+}
+
+#[derive(std::fmt::Debug)]
+pub struct QueryParams {
+    pub(self) params: Vec<(String, String)>,
+}
+
+impl QueryParams {
+    pub fn new(params: Vec<(String, String)>) -> QueryParams {
+        QueryParams { params }
+    }
+    fn from_request(req: &Request<Body>) -> QueryParams {
+        QueryParams::from_uri(req.uri())
+    }
+    pub fn from_uri(uri: &http::Uri) -> QueryParams {
+        let mut params: Vec<(String, String)> = uri.query()
+            .map(|v| {
+                url::form_urlencoded::parse(v.as_bytes()).into_owned().collect()
+            })
+            .unwrap_or_else(Vec::new);
+        for (k,v) in params.iter_mut() {
+            k.make_ascii_lowercase();
+        }
+        params.sort_by(|(x, _), (a, _)| x.cmp(a));
+        QueryParams::new(params)
+    }
+    pub fn from_str(qs: &str) -> QueryParams {
+        let mut params: Vec<(String, String)> =
+                url::form_urlencoded::parse(qs.as_bytes()).into_owned().collect();
+        for (k,v) in params.iter_mut() {
+            k.make_ascii_lowercase();
+        }
+        params.sort_by(|(x, _), (a, _)| x.cmp(a));
+        QueryParams::new(params)
+    }
+    pub fn find(&self, name: &String) -> Option<&String> {
+        if let Some((_, v)) = self.params.iter().find(|(kn, _)| name == kn) {
+            Some(v)
+        } else {
+            None
+        }
+    }
+    pub fn state(&self) -> Option<&String> {
+        self.find(&"state".to_string())
+    }
+    pub fn nonce(&self) -> Option<&String> {
+        self.find(&"nonce".to_string())
+    }
+    pub fn redirect_url(&self) -> Option<&String> {
+        self.find(&"redirect_url".to_string())
+    }
+    pub fn client_id(&self) -> Option<&String> {
+        self.find(&"client_id".to_string())
+    }
+    pub fn scopes(&self) -> Vec<&str> {
+        self.find(&"scope".to_string()).map(|s| s.split_whitespace().collect()).unwrap_or_else(Vec::new)
+    }
+    pub fn resource(&self) -> Vec<&str> {
+        let resources = self.params.iter().filter(|(k, _)| k.eq("resource"))
+            .map(|(_, v)| v.as_str()).collect();
+        println!("resources: {:?}", resources);
+        resources
+    }
+}
+
+#[derive(std::fmt::Debug)]
+pub struct RequestBody {
+    pub(self) payload: String,
+    pub(self) json: serde_json::Value,
+}
+
+impl RequestBody {
+    const PAYLOAD_SIZE_MAX: u64 = (32 * 1024);
+    pub fn from_bytes(body: Bytes) -> RequestBody {
+        if !body.is_empty() {
+            if let Ok(form_body) = String::from_utf8(body.to_vec()) {
+                //println!("RequestBody::from_bytes {:?}", form_body);
+                return  RequestBody {
+                    payload: form_body.to_owned(),
+                    json: serde_json::from_str(&form_body).unwrap()
+                }
+            }
+        }
+        RequestBody {payload : String::from(""), json: serde_json::Value::from("") }
+    }
+}
+
+#[derive(std::fmt::Debug)]
+pub struct ErrorResponse {
+    body: ResponseBody,
+    code: String,
+    desc: String,
+    uri: String,
+    state: Vec<u8>,
+}
+
+
+/// OAuth 2.0 and OIDC error codes per respective specs.
+/// RFC 6749, section 4.1.2.1
+impl ErrorResponse {
+    const ERR_CODE_EMPTY: &'static str = "";
+    const ERR_INVALID_REQUEST: &'static str = "invalid_request";
+    const ERR_UNAUTHZ_CLIENT: &'static str = "unauthorized_client";
+    const ERR_INVALID_CLIENT: &'static str = "invalid_client";
+    const ERR_ACCESS_DENIED: &'static str = "access_denied";
+    const ERR_UNSUPPORTED_RESPONSE_TYPE: &'static str = "unsupported_response_type";
+    const ERR_INVALID_SCOPE: &'static str = "invalid_scope";
+    const ERR_SERVER_ERROR: &'static str = "server_error";
+    const ERR_TEMP_UNAVAILABLE: &'static str = "temporarily_unavailable";
+    const ERR_INVALID_GRANT: &'static str = "invalid_grant";
+    const ERR_UNSUPPORTED_GRANT_TYPE: &'static str = "unsupported_grant_type";
+
+    fn new() -> ErrorResponse {
+        ErrorResponse {
+            body : ResponseBody::new(),
+            code: ErrorResponse::ERR_CODE_EMPTY.to_string(),
+            desc: ErrorResponse::ERR_CODE_EMPTY.to_string(),
+            uri: ErrorResponse::ERR_CODE_EMPTY.to_string(),
+            state: Vec::new(),
+        }
+    }
+    fn body(self) -> ResponseBody {
+        self.body
+    }
+    fn safe_uri(uri: &str) -> bool {
+        if uri.is_ascii() {
+            for ch in uri.chars() {
+                let r = match ch as u8 {
+                    0x21 => true,
+                    0x23 ..= 0x5B => true,
+                    0x5D ..= 0x7E => true,
+                    _ => false
+                };
+                if !r { return false; }
+            }
+        }
+        true
+    }
+    fn safe_str(uri: &str) -> bool {
+        if uri.is_ascii() {
+            for ch in uri.chars() {
+                let r = match ch as u8 {
+                    0x21 => true,
+                    0x23 ..= 0x5B => true,
+                    0x5D ..= 0x7E => true,
+                    _ => false
+                };
+                if !r { return false; }
+            }
+        }
+        true
+    }
+    /// RFC 6749 states that values for the "error" parameter MUST NOT include
+    /// these three ASCII chars: ", \, and DEL.
+    ///
+    /// updates the response object only if `code` connforms.
+    fn set_error_code(&mut self, code: &str) -> &mut ErrorResponse {
+        if code.is_ascii() && ErrorResponse::safe_str(code) {
+            self.code = code.to_owned();
+        }
+        self
+    }
+    fn invalid_request(&mut self) -> &mut ErrorResponse {
+        self.set_error_code(ErrorResponse::ERR_INVALID_REQUEST)
+    }
+    fn invalid_client(&mut self) -> &mut ErrorResponse {
+        self.set_error_code(ErrorResponse::ERR_INVALID_CLIENT)
+    }
+    fn unauthorized_client(&mut self) -> &mut ErrorResponse {
+        self.set_error_code(ErrorResponse::ERR_UNAUTHZ_CLIENT)
+    }
+    fn invalid_grant(&mut self) -> &mut ErrorResponse {
+        self.set_error_code(ErrorResponse::ERR_INVALID_GRANT)
+    }
+    fn access_denied(&mut self) -> &mut ErrorResponse {
+        self.set_error_code(ErrorResponse::ERR_ACCESS_DENIED)
+    }
+    fn unsupported_response_type(&mut self) -> &mut ErrorResponse {
+        self.set_error_code(ErrorResponse::ERR_UNSUPPORTED_RESPONSE_TYPE)
+    }
+    fn invalid_scope(&mut self) -> &mut ErrorResponse {
+        self.set_error_code(ErrorResponse::ERR_INVALID_SCOPE)
+    }
+    fn server_error(&mut self) -> &mut ErrorResponse {
+        self.set_error_code(ErrorResponse::ERR_SERVER_ERROR)
+    }
+    fn temporarily_unavailable(&mut self) -> &mut ErrorResponse {
+        self.set_error_code(ErrorResponse::ERR_TEMP_UNAVAILABLE)
+    }
+    /// updates the response object only if `desc` connforms.
+    fn set_description(&mut self, desc: &str) -> &mut ErrorResponse {
+        if desc.is_ascii() && ErrorResponse::safe_str(desc) {
+            self.desc = desc.to_owned();
+        }
+        self
+    }
+    /// updates the response object only if `uri` is a valid URI.
+    fn set_uri(&mut self, uri: &str) -> &mut ErrorResponse {
+        if uri.is_ascii() && ErrorResponse::safe_uri(uri) {
+            if uri.parse::<http::Uri>().is_ok() {
+                self.uri = uri.to_owned();
+            }
+        }
+        self
+    }
+    fn set_state(&mut self, state: &str) -> &mut ErrorResponse {
+        self.state = state.as_bytes().to_vec();
+        self
+    }
+}
+
+#[derive(std::fmt::Debug)]
+pub struct ResponseBody {
+    map: serde_json::Map<String, serde_json::Value>,
+}
+impl ResponseBody {
+    pub fn new() -> ResponseBody {
+        ResponseBody { map : serde_json::Map::new() }
+    }
+    pub fn add(&mut self, key: &str, val: &str) -> &mut ResponseBody {
+        if key.len() > 0 { 
+            self.map.insert(key.to_owned(), serde_json::Value::from(val));
+        }
+        self
+    }
+    pub fn add_i64(&mut self, key: &str, val: i64) -> &mut ResponseBody {
+         if key.len() > 0 { 
+             self.map.insert(key.to_owned(), serde_json::Value::from(val));
+         }
+         self
+    }
+    pub fn add_f64(&mut self, key: &str, val: f64) -> &mut ResponseBody {
+         if key.len() > 0 { 
+             self.map.insert(key.to_owned(), serde_json::Value::from(val));
+         }
+         self
+    }
+    pub fn add_bool(&mut self, key: &str, val: bool) -> &mut ResponseBody {
+         if key.len() > 0 { 
+             self.map.insert(key.to_owned(), serde_json::Value::from(val));
+         }
+         self
+    }
+    pub fn de(&self) -> String {
+        serde_json::to_string(&self.map).unwrap_or("".to_owned())
+    }
 }
 
 impl AuthEndpoint {
+    
     pub fn new(running: bool, err: VertexError, host_port: String, sock: Option<SocketAddr>, scheme: &str) -> AuthEndpoint {
-        AuthEndpoint {running, err, host_port, sock, scheme: String::from(scheme)}
+        AuthEndpoint {running, err, host_port, sock}
     }
     fn init(scheme: &str, host_addr: &str) -> AuthEndpoint {
         let sock_addresses = host_addr.to_socket_addrs();
@@ -50,58 +297,51 @@ impl AuthEndpoint {
             }
             AuthEndpoint::new(false, err, String::from(host_addr), sock, scheme)
     }
-    fn fnonce() -> HashMap<String, String> {
-        println!("fnonce");
-        HashMap::new()
+    async fn process_request(req: Request<Body>) -> Result<Response<Body>, Infallible> {
+        let (head, body) = req.into_parts();
+        let uri = head.uri;
+        let qp: QueryParams = QueryParams::from_uri(&uri);
+        let payload_size_max = match body.size_hint().upper() {
+            Some(v) => v,
+            None => RequestBody::PAYLOAD_SIZE_MAX + 1
+        };
+        if payload_size_max <= RequestBody::PAYLOAD_SIZE_MAX {
+            if let Ok(body_bytes) = hyper::body::to_bytes(body).await {
+                let rb = RequestBody::from_bytes(body_bytes);
+                println!("RequestBody after serialization {:?}", rb);
+            }
+        }
+        qp.resource();
+        match uri.path() {
+            "/authorize" => {
+                let indus_authority: &str = head.headers.get("Host").unwrap().to_str().unwrap();
+                Ok(Response::new(Body::from("<html><body><h1>Hello ".to_owned() + indus_authority + "</h1></body></html>\n")))
+            },
+            _ => {
+                let mut jr: ResponseBody = ResponseBody::new();
+                jr.add("error", "Authentication Failed");
+                qp.state().map(|val| { jr.add("state", val) });
+                qp.nonce().map(|val| { jr.add("nonce", val) });
+                let resp = Response::builder()
+                    .status(StatusCode::BAD_REQUEST)
+                    .header("X-Indus-TxID", "1234")
+                    .header("Content-Type", "application/json")
+                    .header("Cache-Control", "no-store")
+                    .header("Pragma", "no-cache")
+                    //.body(jr.de())
+                    .body(Body::from(jr.de()))
+                    .unwrap();
+                Ok(resp)
+            }
+        }
     }
-    fn query_params(req: &Request<Body>) {
-        let params: HashMap<String, String> = req
-                .uri()
-                .query()
-                .map(|v| {
-                    println!("v = {}", v);
-                    url::form_urlencoded::parse(v.as_bytes())
-                        .into_owned()
-                        .collect()
-                })
-                .unwrap_or_else(AuthEndpoint::fnonce);
-                //.unwrap_or_else(HashMap::new);
 
-        for (_key, _value) in params {
-            println!("query_params: {:?}: val: {:?}", _key, _value);
-        }
-    }
     pub async fn run(self: &AuthEndpoint) {
-        //let scheme = self.scheme.clone();
-        async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
-            let headers: &HeaderMap = req.headers();
-            for (_key, _value) in headers.iter() {
-                //println!("hk: {:?}: val: {:?}", key, value);
-            }
-            AuthEndpoint::query_params(&req);
-            let path: &str = req.uri().path();
-            match (req.method(), req.uri().path()) {
-                (&Method::GET, "/authorize") => {
-                    let host_name_port: &str = headers.get("Host").unwrap().to_str().unwrap();
-                    let url_str = "http://".to_string() + host_name_port + &req.uri().to_string();
-                    let req_url = Url::parse(&url_str).unwrap();
-                    let params = req_url.query_pairs();
-                    if let Some(qs) = req.uri().query() {
-                        log::info!("request path and query: {} {}", path, qs);
-                        params.for_each(|(i, x)| log::info!("{} {}", i, x));
-                    }
-                    Ok(Response::new(Body::from("<html><body><h1>Hello</h1></body></html>")))
-                },
-                (_, _) => {
-                    Ok(Response::new(Body::from("<html><body><h1>Bad Request</h1></body></html>")))
-                }
-            }
-        }
         let new_service = make_service_fn(|_conn: &AddrStream| async {
-            Ok::<_, Infallible>(service_fn(handle))
+            Ok::<_, Infallible>(service_fn(AuthEndpoint::process_request))
         });
-        let server = Server::bind(&self.sock.unwrap()).serve(new_service);
         println!("Listening on http://{}", self.sock.unwrap());
+        let server = Server::bind(&self.sock.unwrap()).serve(new_service);
         if let Err(e) = server.await {
             eprintln!("server error: {}", e);
         }
