@@ -3,12 +3,13 @@
 use std::convert::Infallible;
 use std::net::{ToSocketAddrs};
 use std::net::SocketAddr;
+use std::fmt;
+use std::str;
 mod pleb;
 use pleb::logger;
 use http::StatusCode;
+use http::header;
 use bytes::Bytes;
-//use url::{Url};
-//use url::form_urlencoded;
 use http_body::{Body as HttpBody};
 
 use hyper::{
@@ -26,7 +27,6 @@ pub enum VertexError {
 
 #[derive(std::fmt::Debug)]
 pub struct AuthEndpoint {
-    running: bool,
     err: VertexError,
     host_port: String,
     sock: Option<SocketAddr>,
@@ -41,9 +41,7 @@ impl QueryParams {
     pub fn new(params: Vec<(String, String)>) -> QueryParams {
         QueryParams { params }
     }
-    fn from_request(req: &Request<Body>) -> QueryParams {
-        QueryParams::from_uri(req.uri())
-    }
+
     pub fn from_uri(uri: &http::Uri) -> QueryParams {
         let mut params: Vec<(String, String)> = uri.query()
             .map(|v| {
@@ -96,6 +94,50 @@ impl QueryParams {
 }
 
 #[derive(std::fmt::Debug)]
+pub struct Headers {
+    pub(self) headers: HeaderMap,
+}
+
+impl fmt::Display for Headers {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for (name, val) in &self.headers {
+            if  !val.is_empty() {
+                if let Ok(s) = str::from_utf8(val.as_bytes()) {
+                    write!(f, "({} : {})", name.as_str(), s).unwrap();
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Headers {
+    pub fn from(hm: HeaderMap) -> Headers {
+        Headers { headers: hm }
+    }
+    pub fn probe(&self, name: &str) -> Option<&str> {
+        for (key, val) in &self.headers {
+            if name == key { return str::from_utf8(val.as_bytes()).ok() }
+        }
+        None
+    }
+    pub fn authz_basic(&self) -> Result<&str, bool> {
+        if self.headers.contains_key(header::AUTHORIZATION) {
+            let val = &self.headers[header::AUTHORIZATION];
+            if let Ok(hval) = str::from_utf8(val.as_bytes()) {
+                let mut authz = hval.split_ascii_whitespace();
+                if let Some(authz_type) = authz.next() {
+                    if authz_type.to_ascii_lowercase() != "basic" { return Err(false); }
+                    let cred = authz.next();
+                    return cred.ok_or(false)
+                }
+            }
+        }
+        Err(false)
+    }
+}
+
+#[derive(std::fmt::Debug)]
 pub struct RequestBody {
     pub(self) payload: String,
     pub(self) json: serde_json::Value,
@@ -106,7 +148,6 @@ impl RequestBody {
     pub fn from_bytes(body: Bytes) -> RequestBody {
         if !body.is_empty() {
             if let Ok(form_body) = String::from_utf8(body.to_vec()) {
-                //println!("RequestBody::from_bytes {:?}", form_body);
                 return  RequestBody {
                     payload: form_body.to_owned(),
                     json: serde_json::from_str(&form_body).unwrap()
@@ -150,9 +191,6 @@ impl ErrorResponse {
             uri: ErrorResponse::ERR_CODE_EMPTY.to_string(),
             state: Vec::new(),
         }
-    }
-    fn body(self) -> ResponseBody {
-        self.body
     }
     fn safe_uri(uri: &str) -> bool {
         if uri.is_ascii() {
@@ -279,9 +317,8 @@ impl ResponseBody {
 }
 
 impl AuthEndpoint {
-    
-    pub fn new(running: bool, err: VertexError, host_port: String, sock: Option<SocketAddr>, scheme: &str) -> AuthEndpoint {
-        AuthEndpoint {running, err, host_port, sock}
+    pub fn new(err: VertexError, host_port: String, sock: Option<SocketAddr>) -> AuthEndpoint {
+        AuthEndpoint {err, host_port, sock}
     }
     fn init(scheme: &str, host_addr: &str) -> AuthEndpoint {
         let sock_addresses = host_addr.to_socket_addrs();
@@ -295,12 +332,17 @@ impl AuthEndpoint {
                     err = VertexError::None;
                 }
             }
-            AuthEndpoint::new(false, err, String::from(host_addr), sock, scheme)
+            AuthEndpoint::new(err, String::from(host_addr), sock)
     }
     async fn process_request(req: Request<Body>) -> Result<Response<Body>, Infallible> {
         let (head, body) = req.into_parts();
         let uri = head.uri;
         let qp: QueryParams = QueryParams::from_uri(&uri);
+        let headers: Headers = Headers::from(head.headers);
+        println!("{}", headers);
+        println!("\n");
+        println!("has basic authz header {}", headers.authz_basic().unwrap_or("/have/nothing/"));
+        println!("\n");
         let payload_size_max = match body.size_hint().upper() {
             Some(v) => v,
             None => RequestBody::PAYLOAD_SIZE_MAX + 1
@@ -314,8 +356,19 @@ impl AuthEndpoint {
         qp.resource();
         match uri.path() {
             "/authorize" => {
-                let indus_authority: &str = head.headers.get("Host").unwrap().to_str().unwrap();
-                Ok(Response::new(Body::from("<html><body><h1>Hello ".to_owned() + indus_authority + "</h1></body></html>\n")))
+                let mut jr: ResponseBody = ResponseBody::new();
+                jr.add("status", "Authorization code grant");
+                qp.state().map(|val| { jr.add("state", val) });
+                qp.nonce().map(|val| { jr.add("nonce", val) });
+                let resp = Response::builder()
+                    .status(StatusCode::OK)
+                    .header("X-Indus-TxID", "1234")
+                    .header("Content-Type", "application/json")
+                    .header("Cache-Control", "no-store")
+                    .header("Pragma", "no-cache")
+                    .body(Body::from(jr.de()))
+                    .unwrap();
+                Ok(resp)
             },
             _ => {
                 let mut jr: ResponseBody = ResponseBody::new();
@@ -324,11 +377,9 @@ impl AuthEndpoint {
                 qp.nonce().map(|val| { jr.add("nonce", val) });
                 let resp = Response::builder()
                     .status(StatusCode::BAD_REQUEST)
-                    .header("X-Indus-TxID", "1234")
                     .header("Content-Type", "application/json")
                     .header("Cache-Control", "no-store")
                     .header("Pragma", "no-cache")
-                    //.body(jr.de())
                     .body(Body::from(jr.de()))
                     .unwrap();
                 Ok(resp)
@@ -340,7 +391,7 @@ impl AuthEndpoint {
         let new_service = make_service_fn(|_conn: &AddrStream| async {
             Ok::<_, Infallible>(service_fn(AuthEndpoint::process_request))
         });
-        println!("Listening on http://{}", self.sock.unwrap());
+        println!("Listening on {}", self.sock.unwrap());
         let server = Server::bind(&self.sock.unwrap()).serve(new_service);
         if let Err(e) = server.await {
             eprintln!("server error: {}", e);
