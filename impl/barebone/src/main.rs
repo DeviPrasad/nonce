@@ -7,10 +7,10 @@ use std::fmt;
 use std::str;
 mod pleb;
 use pleb::logger;
-use http::StatusCode;
-use http::header;
+use hyper::http::StatusCode;
+use hyper::http::header;
 use bytes::Bytes;
-use http_body::{Body as HttpBody};
+use hyper::body::HttpBody;
 
 use hyper::{
     service::{make_service_fn, service_fn},
@@ -42,7 +42,7 @@ impl QueryParams {
         QueryParams { params }
     }
 
-    pub fn from_uri(uri: &http::Uri) -> QueryParams {
+    pub fn from_uri(uri: &hyper::Uri) -> QueryParams {
         let mut params: Vec<(String, String)> = uri.query()
             .map(|v| {
                 url::form_urlencoded::parse(v.as_bytes()).into_owned().collect()
@@ -223,7 +223,7 @@ impl ErrorResponse {
     /// RFC 6749 states that values for the "error" parameter MUST NOT include
     /// these three ASCII chars: ", \, and DEL.
     ///
-    /// updates the response object only if `code` connforms.
+    /// updates the response object only if `code` conforms.
     fn set_error_code(&mut self, code: &str) -> &mut ErrorResponse {
         if code.is_ascii() && ErrorResponse::safe_str(code) {
             self.code = code.to_owned();
@@ -267,7 +267,7 @@ impl ErrorResponse {
     /// updates the response object only if `uri` is a valid URI.
     fn set_uri(&mut self, uri: &str) -> &mut ErrorResponse {
         if uri.is_ascii() && ErrorResponse::safe_uri(uri) {
-            if uri.parse::<http::Uri>().is_ok() {
+            if uri.parse::<hyper::Uri>().is_ok() {
                 self.uri = uri.to_owned();
             }
         }

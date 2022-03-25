@@ -11,24 +11,11 @@ authors = ["The Indus Project Developers"]
 [dependencies]
 log = "0.4"
 env_logger = "0.9.0"
+# just enough features for running "async main"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 bytes = { version = "1" }
 url = { version = "2", features = ["serde"] }
-http-body = { version = "0.4" }
-http = { version = "0.2.5"}
-tokio = { version = "1", features = ["full"] }
 serde_json = "1"
 serde = { version = "1", features = ["derive"] }
 hyper = { version="0.14", features = ["http1", "http2", "server", "tcp", "runtime", "stream"] }
-#either = "1"
-#anyhow="1"
-#thiserror="1"
-#tinyvec="1"
-#headers = "0.*"
-#chrono = "0.*"
-#base64 = "0.*"
-#rand = "0.8"
-#jsonwebtoken = "7"
-#jws = "0.2"
-#hmac = "0.11"
-#ring = "0"
 #data-encoding = "2"
