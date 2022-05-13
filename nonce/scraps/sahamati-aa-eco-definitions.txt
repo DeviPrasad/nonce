@@ -1,0 +1,114 @@
+The Architecture of Account Aggregation in India
+
+Financial Service Regulator (FSR)
+    Reserve Bank of India - RBI
+    Securities and Exchange Board of India - SEBI - https://www.sebi.gov.in/
+    Insurance Regulatory and Development Authority of India - IRDAI - https://www.irdai.gov.in/
+    Pension Fund Regulatory & Development Authority - PFRDA - https://www.pfrda.org.in/
+
+
+Registered Investment Adviser (RIA)
+    KAIROS CAPITAL - https://kairoscapital.in/
+    paisabazzar 
+
+Financial Information
+    Bank deposits including
+        fixed deposits
+        savings deposit accounts
+        recurring deposit accounts
+        current deposit accounts.
+    Deposits with NBFCs
+    Structured Investment Product(SIP)
+    Commercial Paper (CP)
+    Certificates of Deposit (CD)
+    Government Securities (Tradable)
+    Equity Shares
+    Bonds
+    Debentures
+    Mutual Fund Units
+    Exchange Traded Funds
+    Indian Depository Receipts
+    CIS (Collective Investment Schemes) Units
+    Alternate Investment Funds (AIF) Units
+    Insurance Policies
+    Balances under the National Pension System (NPS)
+    Units of Infrastructure Investment Trusts
+    Units of Real Estate Investment Trusts
+    Any other information as may be specified by the Bank for the purposes of these directions, from time to time.
+
+
+
+Financial Information User (FIU)
+    isa: FI registered or regulated by any of the 4 FSRs.
+    isa: FIP.
+        - regulatory requirements - 
+        An entity MUST BE be a FIP first to be a FIU (as on the year 2022).
+    collaborators: inancial Information Providers (FIP) and Account Aggregators (AA).
+    technicalFunction:
+        receive digitally signed data from FIP via AA.
+    Note:
+        No physical document collection or submission.
+        Consent-based and secure.
+
+
+
+Financial Information Provider (FIP)
+    isa: FI
+    technicalFunction:
+        maintain the most recent status of Consent and verifY it before servicing FI requests.
+        use a well-defined unique identifier belonging to the user to discover the accounts.
+            The unique id could be FIP Customer ID, verified mobile phone number, or PAN.
+            The exact mechanism and the unique id used is specific to the FIP.
+    Note:
+         Account Aggregator (AA) acts as consent collector
+
+
+Consent
+    isa digitally signed artefact collected by AA from a Subject for the purpose of using it to request Finfo from a FIP
+    Consent can be queried, paused, revoked by the Subject/User anytime.
+    Consent is generated and valid for only linked accounts.
+    responsibiltiy: AA acts as consent collector
+        FIP maintains the most recent status of Consent and verifies it before servicing FI requests.
+    ** Is a consent identified by a unique id?
+
+
+
+Account Aggregator (AA)
+    isa: PSP
+    isa: RBI-licensed NBFC
+    responsibility:
+        data intermediary bewewn FIs and FIUs.
+        issue account handles to account holders of a FI which has registered with the AA.
+        User can sign-up and create an account with more than one AAs.
+        Signing up does not require registering the FIP account of the user.
+    example AA in India:
+        Finvu - https://finvu.in/
+            https://finvu.github.io/sandbox/
+        OneMoney - https://developer.onemoney.in
+        CAMS Finserv - https://camsfinserv.com/
+        Perfios AA - https://www.perfios-aa.in/
+        NeSL Asset Data Limited - NADL
+            https://nadl-aa.github.io/sandbox-api/
+            National e-governance Services Limited.
+        Setu - https://setu.co/data/account-aggregator
+        Yodlee Finsoft - https://aa.yodleefinsoft.com/aaclient/
+    reference:
+        https://sahamati.org.in/fip-fiu-connecting-with-account-aggregators/
+        NBFC - Account Aggregator (AA) API Specification
+            https://specifications.rebit.org.in/NBFC-AA%20API%20Specification_Core_Final_08Nov.pdf
+
+    Note:
+        AA acts as a consent manager between financial data providers and consumers.
+        AA is a platform for carrying financial data transfer.
+        AA cannot view or use data.
+        Data is always encrypted - at rest and in transit.
+        Customers can transfer financial data from a FI (FIP) to another FI (FIU) with which they wish to transact.
+     Consumer's Privileges:
+        PSU can revoke, at any point in time, their consents given in the past.
+        PSU's credentials are never shared with other entities.
+        
+
+
+
+Technology Service Provider (TSP)
+

@@ -1,0 +1,131 @@
+
+
+Electronic money (E-money).
+    isa: electronic store of monetary value on a technical device.
+    usedTo: make payments to entities other than the e-money issuer.
+
+
+
+Electronic Money Institution (EMI).
+    isa: supplier of the financial product ‘electronic money’.
+    approvedBy: an NCA. Approval is a regulatory requirement.
+    usedTo: make payments to parties other than the issuer.
+    purpose: monetary value stored on an electronic carrier or remotely in a central accounting system.
+
+
+Financial Institution (FI)
+    isa: generic term.
+    refersTo: banks, credit unions, building societies, EMIs and Payment Institutions.
+
+
+
+Payment Service Provider (PSP)
+    An entity which carries out regulated payment services.
+    subtypes: AISP, PISP, CBPII, ASPSP, TPP
+
+
+Types of PSPs
+    Account Information Service Provider (AISP).
+    PISP
+    CBPII
+    ASPSP
+    TPP
+
+
+Payment Services User (PSU)
+    isa: natural or legal person making use of a payment service as a payee, payer or both.
+    role: payee, payer.
+
+
+
+Third Party Provider (TPP)
+    isa: PSP
+    isa: Account Information Service Provider (AISPs).
+    isa: Payment Initiation Service Provider (PISP).
+        make-payments, receive-payments, user financial transaction data.
+    purpose: provide account information services and/or to initiate payments.
+    needsAccessTo: customer's accounts.
+    Benifit from the new card-based offerings.
+
+
+
+Account Information Service Provider (AISP)
+    isa: TPP
+    isa: PSP
+    responsibility: A TPP that aggregates online account information of one or more accounts held at one or more ASPSPs (FIs).
+    service:
+        AISP can only access account information.
+        AISPs may perform account management or generate dashboards for a PSU.
+        AISPs access account information for the purposes of analysis and aggregation.
+        AISPs access information stored with account-keeping financial institutions on behalf of a customer
+    Use case:
+        Check creditworthiness as part of an online loan application.
+        Infer customer spending patterns
+        Calculate expenses
+        Predict and/or determine customer's financial needs.
+
+
+
+Payment Initiation Service Provider (PISP)
+    isa: TPP
+    service:
+        Payment Initiation Service (PIS).
+        initiate payments on behalf of customers.
+        The customer NEED NOT directly access their account or use a debit or credit card.
+        PISP trigger real transactions in an online banking account and debit a customer’s account.
+        A PISP initiates a credit transaction on behalf of a customer.
+    Note:
+        Unlike banks, which manage their customers’ money, PISPs only trigger transactions.
+        PISPs never actually receive a customer’s money.
+        PISPs must ensure that third parties cannot access customer's account information.
+
+
+
+Consent for Confirmation of Funds (CoF)
+
+
+Card-Based Payment Instrument Issuer - CBPII
+    isa: Payment Service Provider (PSP)
+    use case: PSU uses the card-based payment instrument to initiate a payment transaction.
+    actors: PSU, ASPSP.
+    precondition: ASPSP is the holder of PSU's accounts.
+    service: CBPII is entitled to request a confirmation from the PSUs ASPSP to which the account is linked, to confirm whether there are sufficient funds available for the transaction amount.
+
+    Open Banking API specifications support CoF services for Card Based Payment Instrument Issuers (CBPIIs).
+    The PSU initiates a payment transaction with the payment instrument for the amount in question.
+    These services allow PSUs to provide explicit consent to an ASPSP.
+    ASPSP runs an authentication flow with the PSU indicating the transaction with CBPII.
+    The PSU MUST provide their explicit consent to the CBPII.
+    ASPSPs respond to confirmation of fund-requests from CBPIIs, with a "Y/N".
+    CBPIIs can subsequently submit confirmation of funds requests to the ASPSP.
+
+    https://standards.openbanking.org.uk/customer-experience-guidelines/cbpii-core-journeys/consent-for-confirmation-of-funds/latest/
+
+
+
+A card based instrument
+    Use case: PSU uses the card-based payment instrument to initiate a payment transaction
+    precondition: accounts are accessible online.
+    purpose: linked to an account or accounts held at one or more different ASPSPs.
+
+
+
+Account Servicing Payment Service Provider (ASPSP)
+    isa: FI that offers a payment account with online access.
+    examples: Banks, Building Socities, Cooperative Socities, Credit Unions, Payment Companies,...
+    service:
+        maintain a payment account for a payer.
+        publish Read/Write APIs to permit, with customer consent, payments initiated by third party providers.
+        make their customers’ account transaction data available to third party providers via their API end points.
+
+
+
+Building Socities are different from banks. They are not for profit cooperative groups owned by their members.
+Credit Unions are formed by large corporations, organizations, and other entities for their employee and members.
+Credit Unions are NOT for profit entreprises owned by their members.
+Credit Unions are FIs that provide traditional banking services.
+
+
+
+
+
