@@ -1,4 +1,8 @@
 The Architecture of Account Aggregation in India
+https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=11729&Mode=0
+https://rbidocs.rbi.org.in/rdocs/notification/PDFs/NT9653CEFA5CC9F84316BF533DE6C3CA4616.PDF
+https://www.rbi.org.in/Scripts/BS_ViewMasDirections.aspx?id=10598
+https://rbidocs.rbi.org.in/rdocs/notification/PDFs/MD46859213614C3046C1BF9B7CF563FF1346.PDF
 
 Financial Service Regulator (FSR)
     Reserve Bank of India - RBI
@@ -6,6 +10,9 @@ Financial Service Regulator (FSR)
     Insurance Regulatory and Development Authority of India - IRDAI - https://www.irdai.gov.in/
     Pension Fund Regulatory & Development Authority - PFRDA - https://www.pfrda.org.in/
 
+UAT-Central Registry
+    a directory of all entities that are testing their implementation in the development environment.
+    used for enrolling the FIU modules (https://sahamati.org.in/financial-information-user-fiu/).
 
 Registered Investment Adviser (RIA)
     KAIROS CAPITAL - https://kairoscapital.in/
@@ -46,21 +53,60 @@ Financial Information User (FIU)
     collaborators: inancial Information Providers (FIP) and Account Aggregators (AA).
     technicalFunction:
         receive digitally signed data from FIP via AA.
+    regulatoryRequirements:
+        MUST be registered with a Financial Service Regulator.
+        Implement the FIU module.
+            https://api.rebit.org.in/spec/fiu
+            https://swagger-ui.rebit.org.in/?url=https://specifications.rebit.org.in/api_specifications/account_aggregator/FIU_1_1_3.yaml
+        Make the implemeted module official by enrolling in the UAT-Central Registry
+            a directory of all entities that are testing their implementation in the development environment.
+        Get certified.
+            demonstrate adherence to Technical Standards prescribed by ReBIT.
+            Sahamati empanelled auditor.
+        Publish the service.
+            added by Sahamati to the Central Registry
+                a directory of all entities that have gone live on the AA ecosystem.
+        Launch the service.
+
     Note:
         No physical document collection or submission.
         Consent-based and secure.
+        Provide instant access to new products and services.
 
 
 
 Financial Information Provider (FIP)
     isa: FI
+    instanceOf:
+        Bank,
+        Securities service provider
+        Insurance provider
+        Pension scheme provider
+        any other account/finance management service providers
     technicalFunction:
+        maintain accounts of the customers.
         maintain the most recent status of Consent and verifY it before servicing FI requests.
+        participate in the Consent Flow API of the AA
+        receives notifications from AA.
+            AA can notify FIP about
+                the changes in the status of consent
+                account delinking request
+                ...
+        enable AAs to discover a customer’s account
+        enable AAs to perform account linking 
+        enable AA to query the financial information of the customer.
         use a well-defined unique identifier belonging to the user to discover the accounts.
             The unique id could be FIP Customer ID, verified mobile phone number, or PAN.
             The exact mechanism and the unique id used is specific to the FIP.
+
+    regulatoryRequirements:
+        Implement the module
+        https://api.rebit.org.in/spec/fip
+        https://swagger-ui.rebit.org.in/?url=https://specifications.rebit.org.in/api_specifications/account_aggregator/FIP_1_1_3.yaml
     Note:
-         Account Aggregator (AA) acts as consent collector
+         FIP is an institutions that holds user data.
+         https://sahamati.org.in/fip-fiu-in-account-aggregators-ecosystem/
+         Account Aggregator (AA) acts as consent collector.
 
 
 Consent
@@ -74,6 +120,8 @@ Consent
 
 
 Account Aggregator (AA)
+    https://api.rebit.org.in/spec/aa
+    https://swagger-ui.rebit.org.in/?url=https://specifications.rebit.org.in/api_specifications/account_aggregator/AA_1_1_3.yaml
     isa: PSP
     isa: RBI-licensed NBFC
     responsibility:
@@ -81,6 +129,14 @@ Account Aggregator (AA)
         issue account handles to account holders of a FI which has registered with the AA.
         User can sign-up and create an account with more than one AAs.
         Signing up does not require registering the FIP account of the user.
+    technicalFunction:
+        manage the lifecycle of consent artefacts through the Consent Flow API.
+        mediates the secure flow of financial information from FIPs to FIUs using Data Flow API.
+            based on explicit user consent
+        exposes Notification method so that FIU and FIP can notify it about the events generated during consent flow and data flow.
+    MUST NOT:
+        access or store user credentials relating to accounts with various financial information providers.
+        undertake any business enterprise other than the business of account aggregation.
     example AA in India:
         Finvu - https://finvu.in/
             https://finvu.github.io/sandbox/

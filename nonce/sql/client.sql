@@ -6,13 +6,13 @@ DROP TABLE IF EXISTS client_tokens;
 
 DROP TABLE IF EXISTS client_secret;
 CREATE TABLE IF NOT EXISTS client_secret (
-    indus_client_id BINARY(32) NOT NULL,
-    client_id       BINARY(16) NOT NULL,
-        -- unique for each instance of a client with the same 'indus_client_id'
-    UNIQUE (indus_client_id, client_id),
-    client_secret   BINARY(32) UNIQUE,
+    clid_rep BINARY(32) NOT NULL,
+    client_id VARCHAR(256) NOT NULL,
+        -- unique for each instance of a client with the same 'clid_rep'
+    UNIQUE (clid_rep, client_id),
+    client_secret BINARY(32) UNIQUE,
     UNIQUE (client_secret),
-    client_passwd   BINARY(32) UNIQUE,
+    client_passwd BINARY(32) UNIQUE,
     UNIQUE (client_passwd),
     client_secret_iat INTEGER NOT NULL DEFAULT 0,
         -- RFC7591 - after a successful dynamic registration request.
@@ -31,40 +31,40 @@ CREATE TABLE IF NOT EXISTS client_secret (
 -- FOREIGN KEY (client_id) REFERNCES client_desc(client_id);
 
 CREATE TABLE IF NOT EXISTS client_reg_token (
-    indus_client_id      BINARY(32) NOT NULL,
-    client_id      	     BINARY(12) NOT NULL,
-    UNIQUE (indus_client_id, client_id),
+    clid_rep BINARY(32) NOT NULL,
+    client_id VARCHAR(256) NOT NULL,
+    UNIQUE (clid_rep, client_id),
     initial_access_token TEXT,
-    init_access_tok_iat  TIMESTAMP NOT NULL,
-    init_access_tok_xat  TIMESTAMP NOT NULL,
-    reg_access_token     TEXT,
-    reg_access_tok_iat   TIMESTAMP NOT NULL,
-    reg_access_tok_xat   TIMESTAMP NOT NULL
+    init_access_tok_iat TIMESTAMP NOT NULL,
+    init_access_tok_xat TIMESTAMP NOT NULL,
+    reg_access_token TEXT,
+    reg_access_tok_iat TIMESTAMP NOT NULL,
+    reg_access_tok_xat TIMESTAMP NOT NULL
         -- OAuth 2.0 bearer token.
         -- issued by AS thorugh the client registration endpoint.
         -- used to authenticate the caller while accessing client configuration endpoint.
 );
 
 CREATE TABLE IF NOT EXISTS client_redirect_uri (
-    client_id BINARY(16) NOT NULL,
-    uri       VARCHAR(2048) CHARACTER SET ascii NOT NULL,
+    client_id VARCHAR(256) NOT NULL,
+    uri VARCHAR(2048) CHARACTER SET ascii NOT NULL,
     UNIQUE (client_id, uri)
 );
 
 CREATE TABLE IF NOT EXISTS client_event (
-    client_id BINARY(16) NOT NULL,
-    msg       TEXT NOT NULL,
-    evt       TIMESTAMP NOT NULL DEFAULT NOW()
+    client_id VARCHAR(256) NOT NULL,
+    msg TEXT NOT NULL,
+    evt TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS client_desc (
     sln SERIAL PRIMARY KEY,
-    indus_client_id BINARY(32) NOT NULL,
+    clid_rep BINARY(32) NOT NULL,
         -- unique id for cleints within this realm.
         -- identify the non-varying component for dynamically registered client instances.
         -- this is used in additional to 'software_id' when available.
-    client_id BINARY(16) NOT NULL,
-    UNIQUE (indus_client_id, client_id),
+    client_id VARCHAR(256) NOT NULL,
+    UNIQUE (clid_rep, client_id),
     health TINYINT NOT NULL DEFAULT 0,
         -- PENDING = 0, REGISTERED = 2, ACTIVE = 4,
         -- COMPROMISED = 8, DEACTIVATED = 16, LOCKED = 32,
@@ -97,19 +97,20 @@ CREATE TABLE IF NOT EXISTS client_desc (
     redirect_uris TEXT CHARACTER SET ascii NOT NULL,
         -- required.
         -- table 'client_redirect_uri' stores the actual URL values.
-    grant_types SET(
-        'authorization_code', 'implicit', 'refresh_token', -- OAuth 2.0 and OIDC
-        'password', 'client_credentials',
-        'urn:ietf:params:oauth:grant-type:jwt-bearer',
-        'urn:ietf:params:oauth:grant-type:saml2-bearer',
-        'urn:openid:params:grant-type:ciba')
-        NOT NULL DEFAULT 'authorization_code',
+    grant_types VARHAR(64) NOT NULL DEFAULT 'authorization_code',
+        -- 'authorization_code', 'implicit', 'refresh_token', -- OAuth 2.0 and OIDC
+        -- 'password', 'client_credentials',
+        -- 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+        -- 'urn:ietf:params:oauth:grant-type:saml2-bearer',
+        -- 'urn:openid:params:grant-type:ciba')
+        -- NOT NULL DEFAULT 'authorization_code',
         -- required. ref: RFC 7591 - OAuth 2.0 Dynamic Registration.
         -- https://openid.net/specs/openid-client-initiated-backchannel-authentication-core-1_0.html
-    response_types SET('code', 'token',
-        'id_token', 'id_token token',
-        'code id_token', 'code token',
-        'code id_token token', 'code token id_token') NOT NULL DEFAULT 'code',
+    response_types VARHAR(32) NOT NULL DEFAULT 'code',
+        -- ('code', 'token',
+        -- 'id_token', 'id_token token',
+        -- 'code id_token', 'code token',
+        -- 'code id_token token', 'code token id_token') NOT NULL DEFAULT 'code',
         -- required.
     logo_uri TEXT CHARACTER SET ascii,
         -- optional.
@@ -216,7 +217,7 @@ CREATE TABLE IF NOT EXISTS client_desc (
         -- OPs can require that request_uri values used be pre-registered with the
         --     'require_request_uri_registration' discovery parameter.
 
-    backchannel_token_delivery_mode CHAR(4) CHARACTER SET ascii DEFAULT '',
+    backchannel_token_delivery_mode CHAR(8) CHARACTER SET ascii DEFAULT '',
         -- REQUIRED. One of the following values: poll, ping, or push.
         -- When using the ping or poll mode, the Client MUST include the CIBA grant type
         --     in the "grant_types" field.
