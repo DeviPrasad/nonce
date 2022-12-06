@@ -162,8 +162,6 @@ Account Aggregator (AA)
      Consumer's Privileges:
         PSU can revoke, at any point in time, their consents given in the past.
         PSU's credentials are never shared with other entities.
-        
-
 
 
 Technology Service Provider (TSP)

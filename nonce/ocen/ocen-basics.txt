@@ -1,0 +1,52 @@
+
+OCEN - open credit enablement network
+Genral Information
+
+    Open Credit Enablement Network (OCEN)- The UPI Moment For The Indian Lending Sector
+    https://blog.cashfree.com/open-credit-enablement-network-ocen/
+
+    What does OCEN mean for small businesses?
+    https://www.financialexpress.com/money/what-does-ocen-mean-for-small-businesses/2071398/
+
+    An OCEN of opportunities: Expectations from the next digital public good
+    Jun 05, 2021
+    https://economictimes.indiatimes.com/small-biz/money/an-ocen-of-opportunities-expectations-from-the-next-digital-public-good/articleshow/83253466.cms
+
+    India’s Open Credit Enablement Network (OCEN)
+    https://www.prove.com/blog/indias-open-credit-enablement-network-ocen
+
+    https://inc42.com/resources/indias-account-aggregator-framework-is-set-to-transform-fintech-beyond-lending-heres-how/
+
+    OCEN & Account Aggregators will change digital lending in India
+    04 Aug 2020
+    https://sahamati.org.in/blog/ocen-account-aggregators-will-change-digital-lending-in-india/
+
+    OCEN - open credit enablement network
+    https://www.credall.org/resources
+
+
+OCEN - open credit enablement network
+Authentic Resources
+    Credit Democratisation Alliance or CredAll
+    https://www.credall.org/about-us
+
+    Credit Bureau Inquiry for Cash Flow based Sachet Loan
+    https://www.youtube.com/watch?v=EKpi3e6Uoms
+
+    Learn about becoming a lender on OCEN
+    https://www.credall.org/lender-on-ocen
+
+    Learn about becoming a LSP
+    https://www.credall.org/loan-service-provider-on-ocen
+
+    Learn about becoming a TSP
+    https://www.credall.org/technology-service-providers
+
+
+API aspects
+    https://pn.ispirt.in/ispirt-third-open-house-on-ocen-api-specifications-next-steps/
+    https://github.com/iSPIRT/OCEN/tree/master/Security
+    https://github.com/iSPIRT/OCEN
+
+
+
