@@ -1,0 +1,38 @@
+NBFC and Account Aggregators
+https://www.rbi.org.in/Scripts/FAQDisplay.aspx?dId=47939
+
+All you wanted to know about NBFCs
+https://www.rbi.org.in/Scripts/FAQView.aspx?Id=92
+
+NBFCs
+https://www.rbi.org.in/Scripts/BS_ViewNBFCForms.aspx
+
+Master Direction- Non-Banking Financial Company - Account Aggregator (Reserve Bank) Directions, 2016 (Updated as on October 05, 2021)
+https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=10598&Mode=0
+
+Sahamati Account Aggregator Ecosystem Participation Terms
+https://sahamati.org.in/wp-content/uploads/2022/04/FINAL-V-1.0-Sahamati-Account-Aggregator-Ecosystem-Participation-Terms.pdf
+
+Account Aggregator Key Resources
+https://sahamati.org.in/account-aggregator-key-resources/
+https://sahamati.org.in/account-aggregator-key-resources/?resources3
+
+NBFC - Account Aggregator (AA)
+API Specification
+https://specifications.rebit.org.in/NBFC-AA%20API%20Specification_Core_Final_08Nov.pdf
+
+Master Directive issued by the RBI for complete details on getting an Account Aggregator license (NBFC-AA license).
+https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=10598&Mode=0
+
+Account Aggregator is a consent manager for Financial Data: a new class of NBFC approved by RBI to manage consent for financial data sharing. It was created through an inter-regulatory decision by Reserve Bank of India (RBI), Securities and Exchange Board of India (SEBI), Insurance Regulatory and Development Authority (IRDAI), Pension Fund Regulatory and Development Authority (PFRDA) through Financial Stability and Development Council (FSDC). RBI licenses the AAs.
+
+Are Housing Finance Companies (HFCs) regulated by NHB allowed to participate in the AA ecosystem?
+As per the press release issued by the RBI dated 13th August 2019, HFCs are recognised as a Non-banking Finance Company (NBFC) and regulated by the RBI. Hence, HFCs can be a part of the AA ecosystem.
+
+Account Aggregator API
+https://specifications.rebit.org.in/api_specifications/account_aggregator/AA.yaml
+https://swagger-ui.rebit.org.in/?url=https://specifications.rebit.org.in/api_specifications/account_aggregator/AA.yaml
+
+Summary
+The Account Aggregator (AA) serves as an intermediary between Financial Information Providers (such as banks, securities, insurance, pensions and other account/finance management service providers) and Financial Information Users. This Application Programming Interface enables AA to manage the lifecycle of consent artifacts, mediates the secure flow of financial information from FIPs to FIUs based on explicit user consent and exposes Notification method so that FIU and FIP can notify it about the events generated during consent flow and data flow. All consent necessarily has to be generated directly on application provided by AA.
+

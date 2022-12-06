@@ -22,4 +22,3 @@ https://github.com/nhynes/jwk-rs
 
 https://datatracker.ietf.org/doc/html/rfc8705
 OAuth 2.0 Mutual-TLS Client Authentication and Certificate-Bound Access Tokens
-
